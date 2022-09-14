@@ -4,9 +4,9 @@ Hedera POAP is a project to implement POAP NFTs on the Hedera Network.
 ## What is a POAP?
 According to the [orignal POAP site](https://poap.xyz/): 
 
-> POAPs are digital mementos, minted in celebration of life's remarkable moments.
-> Each POAP is a gift from an issuer to collectors, in celebration of a special shared memory.
-> By minting these memories to the blockchain, collectors build a rich tapestry of tokenized experiences which unlock a world of possibilities.
+> POAPs are digital mementos, minted in celebration of life's remarkable moments. Each POAP is a gift from an issuer to
+> collectors, in celebration of a special shared memory. By minting these memories to the blockchain, collectors build a
+> rich tapestry of tokenized experiences which unlock a world of possibilities.
 
 Under the hood, POAPs are NFTs that are easily minted through a web3app. POAPs differ from "classic" NFTs in that each
 instance or "drop" has multiple copies of it minted. Each copy is identical to each other copy with the exception of a
