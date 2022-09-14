@@ -9,7 +9,7 @@ According to the [orignal POAP site](https://poap.xyz/):
 > rich tapestry of tokenized experiences which unlock a world of possibilities.
 
 Under the hood, POAPs are NFTs that are easily minted through a web3app. POAPs differ from "classic" NFTs in that each
-instance or "drop" has multiple copies of it minted. Each copy is identical to each other copy with the exception of a
+instance or "drop" has multiple copies of it minted. Each copy is identical to each other copy with the exception of the
 serial number.
 
 ## POAP Parameters
