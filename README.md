@@ -12,6 +12,9 @@ Under the hood, POAPs are NFTs that are easily minted through a web3app. POAPs d
 instance or "drop" has multiple copies of it minted. Each copy is identical to each other copy with the exception of the
 serial number.
 
+## POAP Uses
+TBD
+
 ## POAP Parameters
 All POAPs are usually minted from the same contract and are distributed in "drops". To set up a drop, an event planner
 provides the following information through a DAPP:
