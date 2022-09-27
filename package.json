@@ -4,16 +4,16 @@
   "description": "A proof of participation token platform for Hedera",
   "main": "sample-scripts/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "solcjs contracts/hashie.sol -o build --optimize --bin && solcjs contracts/hashie.sol -o build --abi",
+    "build:test": "solcjs contracts/NFTCreator.sol -o build --optimize --bin && solcjs contracts/NFTCreator.sol -o build --abi",
+    "deploy": "node scripts/deploy.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@hashgraph/hethers": "^1.2.2",
     "@hashgraph/sdk": "^2.18.1",
     "@hashgraph/smart-contracts": "hashgraph/hedera-smart-contracts",
     "dotenv": "^16.0.2"
-  },
-  "scripts": {
-    "build": "solcjs contracts/hashie.sol -o build --bin"
   }
 }

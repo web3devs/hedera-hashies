@@ -16,7 +16,7 @@ struct HashiesCollection {
 contract Hashies is KeyHelper, ExpiryHelper {
     string constant NFT_TOKEN_NAME = "Hashies Participation Token";
     string constant NFT_SYMBOL = "HASHIES";
-    uint32 constant AUTO_RENEW_EXPIRY = 90 * 24 * 60 * 60;
+    uint32 constant AUTO_RENEW_EXPIRY = 90 * 24 * 60 * 60; // 90 days
 
     address owner;
 
@@ -27,37 +27,36 @@ contract Hashies is KeyHelper, ExpiryHelper {
     mapping(uint256 => HashiesCollection) collections;
     uint256 totalHashieCollections = 0;
 
-    event HashiesNFTCreated(address nftAddress, address contractOwner);
+    event HashiesNFTCreated(address nftAddress, address contractOwner, int responseCode);
     event HashiesCollectionCreated();
 
     constructor() {
         owner = msg.sender;
-        _init();
     }
 
-    function _init() private {
+    function initialize() external {
+        require(owner == msg.sender, "owner only");
+
         IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
         keys[0] = createSingleKey(HederaTokenService.SUPPLY_KEY_TYPE, CONTRACT_ID_KEY, address(this));
 
         IHederaTokenService.HederaToken memory newNft;
-
-        newNft.name = NFT_TOKEN_NAME;
-        newNft.symbol = NFT_SYMBOL;
+        newNft.name = "#ies";
+        newNft.symbol = "$#IES";
         newNft.treasury = address(this);
-        newNft.tokenSupplyType = false;
-        newNft.tokenKeys = keys;
+        newNft.memo = 'Set up the HTS NFT that will be used for all Hashies';
+        newNft.tokenSupplyType = true;
+        newNft.maxSupply = 500;
         newNft.freezeDefault = false;
-        newNft.expiry = createAutoRenewExpiry(address(this), AUTO_RENEW_EXPIRY);
+        newNft.tokenKeys = keys;
+        newNft.expiry = createAutoRenewExpiry(address(msg.sender), AUTO_RENEW_EXPIRY);
 
         (int responseCode, address createdToken) = HederaTokenService.createNonFungibleToken(newNft);
 
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Failed to create Hashie NFT");
-        }
+//        require(responseCode == HederaResponseCodes.SUCCESS, "Failed to create Hashies NFT");
 
         nftCollectionAddress = createdToken;
-
-        emit HashiesNFTCreated(createdToken, msg.sender);
+        emit HashiesNFTCreated(createdToken, msg.sender, responseCode);
     }
 
     function createNewHashie(
