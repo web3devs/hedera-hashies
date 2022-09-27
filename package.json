@@ -1,0 +1,19 @@
+{
+  "name": "hedera-poap",
+  "version": "0.0.1",
+  "description": "A proof of participation token platform for Hedera",
+  "main": "sample-scripts/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@hashgraph/sdk": "^2.18.1",
+    "@hashgraph/smart-contracts": "hashgraph/hedera-smart-contracts",
+    "dotenv": "^16.0.2"
+  },
+  "scripts": {
+    "build": "solcjs contracts/hashie.sol -o build --bin"
+  }
+}

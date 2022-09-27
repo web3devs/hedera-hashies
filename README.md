@@ -28,7 +28,8 @@ provides the following information through a DAPP:
 - maximum quantity of POAPs in the drop (unlimited if not specified)
 - a claim code that must be used to claim a POAP from a drop (optional)
 - A list of addresses that can claim a POAP (optional)
-- whether a POAP is transferable
+- whether a POAP can be transfered
+- whether a POAP can be burned
 - required assets (optional)
 - required payment (free if not specified)
 
@@ -41,6 +42,13 @@ provides the following information through a DAPP:
 - [React Boilerplate for Hedera](https://github.com/publu/hedera-reactjs-boilerplate)
 - [HIP-17 Non-Fungible Tokens](https://hips.hedera.com/hip/hip-17)
 - [HIP-412 NFT Token Metadata Schema](https://hips.hedera.com/hip/hip-412)
+
+## Commentary
+The term POAP is trademarked, so while brands can offer special NFTs for being in certain places at specific times (up to a year), not all are technically considered POAPs. We would need to come up with a different name.
+
+There are many integrations built around the POAP ecosystem.
+- [GitPOAP](https://www.gitpoap.io/) -- Automatically award POAPs for open source contributions
+- []
 
 ## Unknown
 - Building and deploying Hedera contracts
