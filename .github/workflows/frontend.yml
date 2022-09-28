@@ -1,0 +1,36 @@
+name: Frontend deploy
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy_and_run:
+    runs-on: ubuntu-18.04
+    defaults:
+      run:
+        working-directory: ./frontend/webapp
+    name: build & deploy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Debug
+        run: node --version
+      - name: Install Dependencies
+        run: yarn
+      - name: Build
+        run: yarn build
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.FRONTEND_DEPLOYER_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.FRONTEND_DEPLOYER_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Copy files to S3
+        run: |
+          aws s3 sync dist/ s3://hashie.net/ --delete --acl public-read
+      # - name: Invalidate CloudFront distribution
+      #   run: |
+      #     aws cloudfront create-invalidation --distribution-id 123 --paths "/*"
