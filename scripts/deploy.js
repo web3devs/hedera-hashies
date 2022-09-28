@@ -1,49 +1,68 @@
 require("dotenv").config();
 const fs = require('fs')
-const {AccountId, Client, PrivateKey, ContractCreateFlow, ContractCreateTransaction, EthereumTransaction,
-    ContractExecuteTransaction
+const {
+    AccountId,
+    Client,
+    PrivateKey,
+    ContractCreateFlow,
+    ContractExecuteTransaction,
+    TokenCreateTransaction,
+    TokenType,
+    TokenSupplyType,
 } = require("@hashgraph/sdk");
-const {hethers} = require("@hashgraph/hethers")
+const {hethers, Contract} = require("@hashgraph/hethers")
 
-let contractId
+async function deployHashiesContract(client) {
+    const bytecode = await fs.readFileSync("build/contracts_hashie_sol_Hashies.bin")
 
-const accountId = AccountId.fromString(process.env.MY_ACCOUNT_ID);
-const privateKey = PrivateKey.fromString(process.env.MY_PRIVATE_KEY);
-let abi
+    // Create contract
+    const createContractTx = await new ContractCreateFlow()
+        .setGas(1500000) // Increase if revert
+        .setBytecode(bytecode) // Contract bytecode
+        .execute(client)
+    const createContractRx = await createContractTx.getReceipt(client);
 
-const main = async () => {
+    console.log(`Contract created with ID: ${createContractRx.contractId} \n`);
+
+    return createContractRx.contractId;
+}
+
+function createClient() {
     const client = Client.forTestnet();
-    client.setOperator(accountId, privateKey);
+    client
+        .setOperator(
+            AccountId.fromString(process.env.MY_ACCOUNT_ID),
+            PrivateKey.fromString(process.env.MY_PRIVATE_KEY)
+        )
+    return client;
+}
 
-    abi = new hethers.utils.Interface(
+async function createHstCollection(hashiesContractAddress, client) {
+    const nftCreateTx = await new TokenCreateTransaction()
+        .setTokenName("Hashies")
+        .setTokenSymbol("HASHIES")
+        .setTokenType(TokenType.NonFungibleUnique)
+        .setSupplyType(TokenSupplyType.Infinite)
+        .setInitialSupply(0)
+        .setTreasuryAccountId(hashiesContractAddress)
+        .setSupplyKey(hashiesContractAddress) // Will this work?
+        .execute(client)
+    const nftCreateRx = await nftCreateTx.getReceipt(client);
+    const tokenId = nftCreateRx.tokenId;
+
+    console.log(`Created HST collection with Token ID: ${tokenId} \n`);
+
+    return tokenId;
+}
+
+function loadAbi() {
+    return new hethers.utils.Interface(
         fs.readFileSync('build/contracts_hashie_sol_Hashies.abi', 'utf8')
     );
+}
 
-    if (!contractId) {
-        const bytecode = await fs.readFileSync("build/contracts_hashie_sol_Hashies.bin")
-
-        console.log('Bytcode length:', bytecode.length)
-
-        // Create contract
-        const createContractTx = await new ContractCreateFlow()
-            .setGas(1500000) // Increase if revert
-            .setBytecode(bytecode) // Contract bytecode
-            .execute(client)
-        const createContractRx = await createContractTx.getReceipt(client);
-        contractId = createContractRx.contractId;
-
-        console.log(`Contract created with ID: ${contractId} \n`);
-    }
-    const initializeParameters = abi.encodeFunctionData("initialize", []);
-
-    const initializeContractTx = await new ContractExecuteTransaction()
-        .setContractId(contractId)
-        .setFunctionParameters(initializeParameters)
-        .setGas(1000000)
-        .execute(client);
-
-    const intializeContractRecord = await initializeContractTx.getRecord(client)
-    intializeContractRecord.contractFunctionResult.logs.forEach(log => {
+function logEvents(record, abi, eventName) {
+    record.contractFunctionResult.logs.forEach(log => {
         // convert the log.data (uint8Array) to a string
         let logStringHex = '0x'.concat(Buffer.from(log.data).toString('hex'));
 
@@ -54,13 +73,33 @@ const main = async () => {
         });
 
         // decode the event data
-        const event = abi.decodeEventLog("HashiesNFTCreated", logStringHex, logTopics.slice(1))
+        const event = abi.decodeEventLog(eventName, logStringHex, logTopics.slice(1))
         console.log(event)
     })
+}
 
-    console.log('Transaction id:', (await initializeContractTx.getReceiptQuery()).transactionId.toString());
+async function initializeHashiesContract(client, contractId, hstTokenId) {
+    let abi = loadAbi();
 
+    const setHstCollectionParameters = abi.encodeFunctionData(
+        "setHstCollectionAddress",
+        [hstTokenId.toSolidityAddress()]
+    );
 
+    const initializeContractTx = await new ContractExecuteTransaction()
+        .setContractId(contractId)
+        .setFunctionParameters(setHstCollectionParameters)
+        .setGas(1000000)
+        .execute(client);
+    logEvents(await initializeContractTx.getRecord(client), abi, "HashiesNFTCreated");
+    return initializeContractTx;
+}
+
+const main = async () => {
+    const client = createClient();
+    const contractId = await deployHashiesContract(client);
+    const hstTokenId = await createHstCollection(contractId, client)
+    await initializeHashiesContract(client, contractId, hstTokenId);
 }
 
 main()
