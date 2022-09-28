@@ -2,7 +2,7 @@ name: Frontend deploy
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   deploy_and_run:
     runs-on: ubuntu-18.04
