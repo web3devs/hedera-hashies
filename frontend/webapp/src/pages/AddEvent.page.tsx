@@ -6,8 +6,7 @@ import Label from '../componeont/Label';
 import './AddEvent.scss';
 
 export default () => {
-  const [claimable1, setClaimable1] = useState(false);
-  const [claimable2, setClaimable2] = useState(false);
+  const [claimable, setClaimable] = useState(false);
   return (
     <div className="flex flex-column justify-content-center align-items-center h-full">
       <h1 className="text-2xl font-bold text-white">Create a new event</h1>
@@ -26,38 +25,22 @@ export default () => {
           </div>
           <InputSwitch
             className="mb-2"
-            checked={claimable1}
+            checked={claimable}
             onChange={(e) => {
-              setClaimable1(e.target.value);
+              setClaimable(e.target.value);
             }}
           />
         </div>
 
-        <div className="text-left text-xs mb-4">
+        <div className="text-left text-xs mb-2">
           Users can mint their own FLOAT based on the parameters defined below.
         </div>
-        <Label className="">Amount</Label>
-        <InputNumber className="mb-4" />
-        <div className="flex">
-          <div className="flex-grow-1">
-            <div className="text-left text-sm">
-              <span className="text-white">Claimable</span>
-            </div>
-            <div className="text-left text-xs mb-4">
-              Users can mint their own FLOAT based on the parameters defined
-              below.
-            </div>
-          </div>
-
-          <InputSwitch
-            className="mb-2"
-            checked={claimable2}
-            onChange={(e) => {
-              setClaimable2(e.target.value);
-            }}
-          />
-        </div>
-
+        {claimable && (
+          <>
+            <Label className="">Cost (HBAR)</Label>
+            <InputNumber className="mb-4" />
+          </>
+        )}
         <Button label="Connect Wallet" className="submit" />
       </Card>
     </div>
