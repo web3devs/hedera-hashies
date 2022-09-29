@@ -1470,22 +1470,20 @@
 .p-radiobutton .p-radiobutton-box:not(.p-disabled).p-focus {
   outline: 0 none;
   outline-offset: 0;
-  box-shadow: 0 0 0 1px #e3f3fe;
   border-color: #6166DC;
 }
 .p-radiobutton .p-radiobutton-box .p-radiobutton-icon {
   width: 12px;
   height: 12px;
   transition-duration: 0.15s;
-  background-color: #151515;
 }
 .p-radiobutton .p-radiobutton-box.p-highlight {
   border-color: #6166DC;
   background: #6166DC;
 }
 .p-radiobutton .p-radiobutton-box.p-highlight:not(.p-disabled):hover {
-  border-color: #1dadff;
-  background: #1dadff;
+  border-color: #7075df;
+  background: #7075df;
   color: #151515;
 }
 .p-radiobutton.p-invalid > .p-radiobutton-box {
