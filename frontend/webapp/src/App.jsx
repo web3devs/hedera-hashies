@@ -4,6 +4,7 @@ import AddEventPage from './pages/AddEvent.page';
 import { createBrowserRouter, RouterProvider, Route } from 'react-router-dom';
 import HomePage from './pages/Home.page';
 import NavBar from './componeont/NavBar';
+import ConfirmationPage from './pages/Confirmation.page';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -12,11 +13,13 @@ const router = createBrowserRouter([
   {
     path: '/add-event',
     element: <AddEventPage />
+  },
+  {
+    path: '/confirmation/:code',
+    element: <ConfirmationPage />
   }
 ]);
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <div className="App bg">
       <NavBar />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Button,
   Calendar,
@@ -12,15 +12,34 @@ import Label from '../componeont/Label';
 
 import './AddEvent.scss';
 import SwitchableField from '../componeont/SwitchableField';
+import { useNavigate } from 'react-router-dom';
 
 export default () => {
-  const [claimable, setClaimable] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [paymentOption, setPaymentOption] = useState<string>('Fee');
   const [fromDate, setFromDate] = useState<Date>(new Date());
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConnect = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      setIsConnected(true);
+    }, 2000);
+  };
+  const handleSubmit = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      navigate('/confirmation/032f75b3ca02a393196a818328bd32e8');
+    }, 3000);
+  };
+
   return (
     <div className="flex flex-column justify-content-center align-items-center h-full">
       <h1 className="text-2xl font-bold text-white">Create a new event</h1>
-      <Card classNames="flex flex-column add-event">
+      <Card className="flex flex-column add-event">
         <Label className="">Event Name</Label>
         <InputText className="mb-4" />
         <Label className="">Event URL</Label>
@@ -66,7 +85,6 @@ export default () => {
         </SwitchableField>
         <SwitchableField
           title="Use Secret Code"
-          className=""
           subtitle="Your FLOAT can only be minted if people know the secret code."
         >
           <Label className="">Code</Label>
@@ -106,8 +124,21 @@ export default () => {
             />
           </div>
         </div>
-
-        <Button label="Connect Wallet" className="submit mt-4" />
+        {isConnected ? (
+          <Button
+            label="Create event"
+            className="submit mt-4"
+            loading={isLoading}
+            onClick={handleSubmit}
+          />
+        ) : (
+          <Button
+            label="Connect Wallet"
+            className="submit mt-4"
+            loading={isLoading}
+            onClick={handleConnect}
+          />
+        )}
       </Card>
     </div>
   );

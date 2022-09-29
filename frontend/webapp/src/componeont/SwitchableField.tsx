@@ -2,7 +2,7 @@ import { InputNumber, InputSwitch } from 'primereact';
 import React, { useState } from 'react';
 import Label from './Label';
 
-export default ({ children, title, subtitle, className }) => {
+export default ({ children, title, subtitle, className = '' }) => {
   const [checked, setChecked] = useState(false);
   return (
     <div className={`${className} flex flex-column  mb-2`}>

@@ -7,6 +7,7 @@ import 'primereact/resources/primereact.min.css'; //core css
 import 'primeicons/primeicons.css'; //icons
 
 import './index.scss';
+import 'primeicons/primeicons.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
