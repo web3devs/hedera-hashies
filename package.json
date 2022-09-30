@@ -1,5 +1,5 @@
 {
-  "name": "hedera-poap",
+  "name": "hedera-hashie",
   "version": "0.0.1",
   "description": "A proof of participation token platform for Hedera",
   "main": "sample-scripts/index.js",

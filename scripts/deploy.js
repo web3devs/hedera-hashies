@@ -9,6 +9,7 @@ const {
     TokenCreateTransaction,
     TokenType,
     TokenSupplyType,
+    ContractFunctionParameters,
 } = require("@hashgraph/sdk");
 const {hethers, Contract} = require("@hashgraph/hethers")
 
@@ -19,6 +20,7 @@ async function deployHashiesContract(client) {
     const createContractTx = await new ContractCreateFlow()
         .setGas(1500000) // Increase if revert
         .setBytecode(bytecode) // Contract bytecode
+        .setAdminKey(client.operatorPublicKey)
         .execute(client)
     const createContractRx = await createContractTx.getReceipt(client);
 
@@ -37,20 +39,25 @@ function createClient() {
     return client;
 }
 
-async function createHstCollection(hashiesContractAddress, client) {
+async function createHTSCollection(client, hashiesContractId) {
+    console.log('creating HTS for', hashiesContractId.toString())
+
     const nftCreateTx = await new TokenCreateTransaction()
         .setTokenName("Hashies")
-        .setTokenSymbol("HASHIES")
+        .setTokenSymbol("HASHIE")
         .setTokenType(TokenType.NonFungibleUnique)
         .setSupplyType(TokenSupplyType.Infinite)
         .setInitialSupply(0)
-        .setTreasuryAccountId(hashiesContractAddress)
-        .setSupplyKey(hashiesContractAddress) // Will this work?
+        // TODO Set the hashies contract as the treasury and admin of the HTS token
+        // .setTreasuryAccountId(hashiesContractAddress)
+        // .setSupplyKey(hashiesContractAddress) // Will this work?
+        .setTreasuryAccountId(client.operatorAccountId)
+        .setSupplyKey(client.operatorPublicKey)
         .execute(client)
     const nftCreateRx = await nftCreateTx.getReceipt(client);
     const tokenId = nftCreateRx.tokenId;
 
-    console.log(`Created HST collection with Token ID: ${tokenId} \n`);
+    console.log(`Created HTS collection. Token ID: ${tokenId}`);
 
     return tokenId;
 }
@@ -78,28 +85,54 @@ function logEvents(record, abi, eventName) {
     })
 }
 
+// async function initializeHashiesContract(client, contractId, htsTokenId) {
+//     const htsSolidityAddress = AccountId.fromString(htsTokenId.toString()).toSolidityAddress();
+//
+//     const identity = {
+//         account: process.env.MY_ACCOUNT_ID,
+//         privateKey: process.env.MY_PRIVATE_KEY
+//     }
+//     const provider = hethers.providers.getDefaultProvider('testnet');
+//     const wallet = new hethers.Wallet(identity, provider)
+//
+//     const contract = new hethers.Contract(contractId.toSolidityAddress(), loadAbi(), wallet);
+//     // const contractWithSigner = contract.connect(provider).connect(wallet)
+//     contract.once('HTSCollectionAssociated', (collectionId, sender) => {
+//         console.log(`${sender} associated the HTS collection ${collectionId} to the hashie contract at ${contract.address}`);
+//     });
+//
+//     const result = await (await contract.setHTSCollectionId(htsSolidityAddress, {gasLimit: 100000})).wait()
+//     console.log('contract call result:', result)
+// }
+
 async function initializeHashiesContract(client, contractId, hstTokenId) {
     let abi = loadAbi();
 
-    const setHstCollectionParameters = abi.encodeFunctionData(
-        "setHstCollectionAddress",
-        [hstTokenId.toSolidityAddress()]
-    );
-
     const initializeContractTx = await new ContractExecuteTransaction()
         .setContractId(contractId)
-        .setFunctionParameters(setHstCollectionParameters)
         .setGas(1000000)
-        .execute(client);
-    logEvents(await initializeContractTx.getRecord(client), abi, "HashiesNFTCreated");
-    return initializeContractTx;
+        .setFunction(
+            "setHTSCollectionId",
+            new ContractFunctionParameters()
+                .addAddress(hstTokenId.toSolidityAddress())
+        )
+        .freezeWith(client)
+        .signWithOperator(client)
+    console.log(initializeContractTx)
+    console.log(initializeContractTx.transactionId.toString())
+    const rx = await initializeContractTx.execute(client)
+    // logEvents(await initializeContractTx.getRecord(client), abi, "HashiesNFTCreated");
+    const receipt = await rx.getReceipt(client);
+    console.log(receipt)
 }
 
 const main = async () => {
     const client = createClient();
-    const contractId = await deployHashiesContract(client);
-    const hstTokenId = await createHstCollection(contractId, client)
-    await initializeHashiesContract(client, contractId, hstTokenId);
+    // const contractId = await deployHashiesContract(client);
+    const contractId = AccountId.fromString('0.0.48476935')
+    // const hstTokenId = await createHTSCollection(client, contractId)
+    const htsTokenId = AccountId.fromString('0.0.48476936')
+    await initializeHashiesContract(client, contractId, htsTokenId);
 }
 
 main()
