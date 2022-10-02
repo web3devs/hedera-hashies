@@ -66,7 +66,7 @@ contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
         newNft.tokenKeys = keys;
         newNft.expiry = createAutoRenewExpiry(owner, defaultAutoRenewPeriod);
 
-        (int responseCode, address createdToken) = createNonFungibleToken(newNft);
+        (int responseCode, address createdToken) = createNonFungibleToken(newNft); // <-- responseCode is unknown
 
         // require(responseCode == HederaResponseCodes.SUCCESS, "Failed to create Hashies NFT");
         if (responseCode != HederaResponseCodes.SUCCESS) {

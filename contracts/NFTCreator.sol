@@ -5,8 +5,10 @@ import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/Hede
 import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/IHederaTokenService.sol';
 import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/HederaTokenService.sol';
 import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/ExpiryHelper.sol';
+import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/KeyHelper.sol';
 
-contract NFTCreator is KeyHelper, ExpiryHelper {
+contract NFTCreator is HederaTokenService, KeyHelper, ExpiryHelper {
+    event LogResponseCode(int responseCode);
 
     function createNft(
         string memory name,
@@ -18,7 +20,7 @@ contract NFTCreator is KeyHelper, ExpiryHelper {
 
         IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
         // Set this contract as supply
-        keys[0] = createSingleKey(HederaTokenService.SUPPLY_KEY_TYPE, KeyHelper.CONTRACT_ID_KEY, address(this));
+        keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
 
         IHederaTokenService.HederaToken memory token;
         token.name = name;
@@ -31,10 +33,11 @@ contract NFTCreator is KeyHelper, ExpiryHelper {
         token.freezeDefault = false;
         token.expiry = createAutoRenewExpiry(address(this), autoRenewPeriod); // Contract automatically renew by himself
 
-        (int responseCode, address createdToken) = HederaTokenService.createNonFungibleToken(token);
+        (int responseCode, address createdToken) = createNonFungibleToken(token); // <--- responseCode is UNKNOWN
 
         if(responseCode != HederaResponseCodes.SUCCESS){
             revert("Failed to create non-fungible token");
+//            emit LogResponseCode(responseCode);
         }
         return createdToken;
     }
@@ -44,7 +47,7 @@ contract NFTCreator is KeyHelper, ExpiryHelper {
         bytes[] memory metadata
     ) external returns(int64){
 
-        (int response, , int64[] memory serial) = HederaTokenService.mintToken(token, 0, metadata);
+        (int response, , int64[] memory serial) = mintToken(token, 0, metadata);
 
         if(response != HederaResponseCodes.SUCCESS){
             revert("Failed to mint non-fungible token");
@@ -59,8 +62,8 @@ contract NFTCreator is KeyHelper, ExpiryHelper {
         int64 serial
     ) external returns(int){
 
-        HederaTokenService.associateToken(receiver, token);
-        int response = HederaTokenService.transferNFT(token, address(this), receiver, serial);
+        associateToken(receiver, token);
+        int response = transferNFT(token, address(this), receiver, serial);
 
         if(response != HederaResponseCodes.SUCCESS){
             revert("Failed to transfer non-fungible token");

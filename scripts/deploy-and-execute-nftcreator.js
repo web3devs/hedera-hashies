@@ -40,7 +40,7 @@ const main = async () => {
 
     // Create contract
     const createContract = new ContractCreateFlow()
-        .setGas(150000) // Increase if revert
+        .setGas(1500000) // Increase if revert
         .setBytecode(bytecode); // Contract bytecode
     const createContractTx = await createContract.execute(client);
     const createContractRx = await createContractTx.getReceipt(client);
@@ -51,14 +51,14 @@ const main = async () => {
     // Create NFT from precompile
     const createToken = new ContractExecuteTransaction()
         .setContractId(contractId)
-        .setGas(300000) // Increase if revert
+        .setGas(8000000) // Increase if revert
         .setPayableAmount(20) // Increase if revert
         .setFunction("createNft",
             new ContractFunctionParameters()
                 .addString("Fall Collection") // NFT name
                 .addString("LEAF") // NFT symbol
                 .addString("Just a memo") // NFT memo
-                .addUint32(250) // NFT max supply
+                .addInt64(250) // NFT max supply
                 .addUint32(7000000) // Expiration: Needs to be between 6999999 and 8000001
         );
     const createTokenTx = await createToken.execute(client);
