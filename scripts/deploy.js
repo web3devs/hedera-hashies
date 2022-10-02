@@ -18,13 +18,14 @@ async function deployHashiesContract(client) {
 
     // Create contract
     const createContractTx = await new ContractCreateFlow()
-        .setGas(1500000) // Increase if revert
+        .setGas(8000000) // Increase if revert
         .setBytecode(bytecode) // Contract bytecode
         .setAdminKey(client.operatorPublicKey)
         .execute(client)
     const createContractRx = await createContractTx.getReceipt(client);
 
     console.log(`Contract created with ID: ${createContractRx.contractId} \n`);
+    logEvents(await createContractTx.getRecord(client), await loadAbi(), "HTSCollectionCreationFailed")
 
     return createContractRx.contractId;
 }
@@ -49,7 +50,7 @@ async function createHTSCollection(client, hashiesContractId) {
         .setSupplyType(TokenSupplyType.Infinite)
         .setInitialSupply(0)
         // TODO Set the hashies contract as the treasury and admin of the HTS token
-        // .setTreasuryAccountId(hashiesContractAddress)
+        // .setTreasuryAccountId(hashiesContractz   Address)
         // .setSupplyKey(hashiesContractAddress) // Will this work?
         .setTreasuryAccountId(client.operatorAccountId)
         .setSupplyKey(client.operatorPublicKey)
@@ -74,13 +75,10 @@ function logEvents(record, abi, eventName) {
         let logStringHex = '0x'.concat(Buffer.from(log.data).toString('hex'));
 
         // get topics from log
-        let logTopics = [];
-        log.topics.forEach(topic => {
-            logTopics.push('0x'.concat(Buffer.from(topic).toString('hex')));
-        });
+        const logTopics = log.topics.map(topic => '0x'.concat(topic.toString('hex')))
 
         // decode the event data
-        const event = abi.decodeEventLog(eventName, logStringHex, logTopics.slice(1))
+        const event = abi.decodeEventLog(eventName, logStringHex, logTopics)
         console.log(event)
     })
 }
@@ -110,7 +108,7 @@ async function initializeHashiesContract(client, contractId, hstTokenId) {
 
     const initializeContractTx = await new ContractExecuteTransaction()
         .setContractId(contractId)
-        .setGas(1000000)
+        .setGas(2000000)
         .setFunction(
             "setHTSCollectionId",
             new ContractFunctionParameters()
@@ -128,11 +126,13 @@ async function initializeHashiesContract(client, contractId, hstTokenId) {
 
 const main = async () => {
     const client = createClient();
-    // const contractId = await deployHashiesContract(client);
-    const contractId = AccountId.fromString('0.0.48476935')
+    const contractId = await deployHashiesContract(client);
+    // const contractId = AccountId.fromString('0.0.48476935')
     // const hstTokenId = await createHTSCollection(client, contractId)
-    const htsTokenId = AccountId.fromString('0.0.48476936')
-    await initializeHashiesContract(client, contractId, htsTokenId);
+    // const htsTokenId = AccountId.fromString('0.0.48476936')
+    // await initializeHashiesContract(client, contractId, htsTokenId);
+
+
 }
 
 main()

@@ -422,7 +422,7 @@
 
 "@hashgraph/smart-contracts@hashgraph/hedera-smart-contracts":
   version "0.1.0"
-  resolved "https://codeload.github.com/hashgraph/hedera-smart-contracts/tar.gz/8546133775642df03ab63d7d7141ef560c41da29"
+  resolved "https://codeload.github.com/hashgraph/hedera-smart-contracts/tar.gz/d0984fcf3ea7a2df85cf679e30387b1befc61d45"
 
 "@hethers/abstract-provider@1.2.0":
   version "1.2.0"

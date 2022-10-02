@@ -36,40 +36,28 @@ const CID = [
 ];
 
 async function main() {
-    let nftCustomFee = await new CustomRoyaltyFee()
-        .setNumerator(5)
-        .setDenominator(10)
-        .setFeeCollectorAccountId(treasuryId)
-        .setFallbackFee(new CustomFixedFee().setHbarAmount(new Hbar(200)));
+    // let nftCustomFee = await new CustomRoyaltyFee()
+    //     .setNumerator(5)
+    //     .setDenominator(10)
+    //     .setFeeCollectorAccountId(treasuryId)
+    //     .setFallbackFee(new CustomFixedFee().setHbarAmount(new Hbar(200)));
 
     let nftCreate = await new TokenCreateTransaction()
         .setTokenName("Fall Collection")
         .setTokenSymbol("LEAF")
         .setTokenType(TokenType.NonFungibleUnique)
-        .setDecimals(0)
+        .setSupplyType(TokenSupplyType.Infinite)
         .setInitialSupply(0)
-        .setTreasuryAccountId(treasuryId)
-        .setSupplyType(TokenSupplyType.Finite)
-        .setMaxSupply(CID.length)
-        .setCustomFees([nftCustomFee])
-        .setAdminKey(adminKey)
-        .setSupplyKey(supplyKey)
-        .setPauseKey(pauseKey)
-        .setFreezeKey(freezeKey)
-        .setWipeKey(wipeKey)
-        .setMaxTransactionFee(Hbar.from(100))
-        .freezeWith(client)
-        .sign(treasuryKey);
-
-    let nftCreateTxSign = await nftCreate.sign(adminKey);
-    let nftCreateSubmit = await nftCreateTxSign.execute(client);
-    let nftCreateRx = await nftCreateSubmit.getReceipt(client);
+        .setTreasuryAccountId(client.operatorAccountId)
+        .setSupplyKey(client.operatorPublicKey)
+        .execute(client);
+    let nftCreateRx = await nftCreate.getReceipt(client);
     let tokenId = nftCreateRx.tokenId;
     console.log(`Created NFT with Token ID: ${tokenId} \n`);
 
     // TOKEN QUERY TO CHECK THAT THE CUSTOM FEE SCHEDULE IS ASSOCIATED WITH NFT
-    var tokenInfo = await new TokenInfoQuery().setTokenId(tokenId).execute(client);
-    console.table(tokenInfo.customFees[0]);
+    // var tokenInfo = await new TokenInfoQuery().setTokenId(tokenId).execute(client);
+    // console.table(tokenInfo.customFees[0]);
 
     // MINT NEW BATCH OF NFTs
     nftLeaf = [];

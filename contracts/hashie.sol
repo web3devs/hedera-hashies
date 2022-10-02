@@ -5,6 +5,7 @@ import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/Hede
 import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/IHederaTokenService.sol';
 import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/HederaTokenService.sol';
 import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/ExpiryHelper.sol';
+import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/KeyHelper.sol';
 
 struct HashiesCollection {
     address owner;
@@ -13,10 +14,9 @@ struct HashiesCollection {
     uint256 totalSupply;
 }
 
-contract Hashies is KeyHelper, ExpiryHelper {
+contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
     string constant NFT_TOKEN_NAME = "Hashies Participation Token";
     string constant NFT_SYMBOL = "HASHIES";
-    uint32 constant AUTO_RENEW_EXPIRY = 90 * 24 * 60 * 60; // 90 days
 
     address owner;
 
@@ -27,7 +27,9 @@ contract Hashies is KeyHelper, ExpiryHelper {
     uint256 totalHashieCollections = 0;
 
     event HTSCollectionAssociated(address htsCollectionId, address caller);
-    event HashiesCollectionCreated();
+    event HTSCollectionCreated(address htsCollectionId, address caller);
+    event HTSCollectionCreationFailed(int statusCode);
+    event HashiesNFTCreated(uint256 collectionId, address caller);
 
     modifier onlyOwner() {
         require(owner == msg.sender, "owner only");
@@ -41,6 +43,7 @@ contract Hashies is KeyHelper, ExpiryHelper {
 
     constructor() {
         owner = msg.sender;
+        initialize();
     }
 
     function setHTSCollectionId(address _htsCollectionId) external onlyOwner {
@@ -49,30 +52,29 @@ contract Hashies is KeyHelper, ExpiryHelper {
         emit HTSCollectionAssociated(_htsCollectionId, msg.sender);
     }
 
-//    function initialize() external {
-//        require(owner == msg.sender, "owner only");
-//
-//        IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
-//        keys[0] = createSingleKey(HederaTokenService.SUPPLY_KEY_TYPE, CONTRACT_ID_KEY, address(this)); // Does this work?
-//
-//        IHederaTokenService.HederaToken memory newNft;
-//        newNft.name = "#ies";
-//        newNft.symbol = "$#IES";
-//        newNft.treasury = address(this);
-//        newNft.memo = 'Set up the HTS NFT that will be used for all Hashies';
-//        newNft.tokenSupplyType = true;
-//        newNft.maxSupply = 500;
-//        newNft.freezeDefault = false;
-//        newNft.tokenKeys = keys;
-//        newNft.expiry = createAutoRenewExpiry(address(msg.sender), AUTO_RENEW_EXPIRY);
-//
-//        (int responseCode, address createdToken) = HederaTokenService.createNonFungibleToken(newNft);
-//
-////        require(responseCode == HederaResponseCodes.SUCCESS, "Failed to create Hashies NFT");
-//
-//        nftCollectionAddress = createdToken;
-//        emit HashiesNFTCreated(createdToken, msg.sender, responseCode);
-//    }
+    function initialize() internal {
+        IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
+        keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
+
+        IHederaTokenService.HederaToken memory newNft;
+        newNft.name = "foo";
+        newNft.symbol = "bar";
+        newNft.treasury = address(this);
+        newNft.memo = 'Set up the HTS NFT that will be used for all Hashies';
+        newNft.tokenSupplyType = false;
+        newNft.freezeDefault = false;
+        newNft.tokenKeys = keys;
+        newNft.expiry = createAutoRenewExpiry(owner, defaultAutoRenewPeriod);
+
+        (int responseCode, address createdToken) = createNonFungibleToken(newNft);
+
+        // require(responseCode == HederaResponseCodes.SUCCESS, "Failed to create Hashies NFT");
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            emit HTSCollectionCreationFailed(responseCode);
+        } else {
+            htsCollectionId = createdToken;
+        }
+    }
 
     function createNewHashie(
         string memory collectionName,
@@ -102,8 +104,7 @@ contract Hashies is KeyHelper, ExpiryHelper {
         bytes[] memory metadataLink;
         metadataLink[0] = hashiesCollection.metadataLink;
 
-        (int response, , int64[] memory nftSerials) =
-            HederaTokenService.mintToken(htsCollectionId, 0, metadataLink);
+        (int response, , int64[] memory nftSerials) = mintToken(htsCollectionId, 0, metadataLink);
         require(response != HederaResponseCodes.SUCCESS, "Failed to mint non-fungible token");
         nftSerial = nftSerials[0];
         collectionSerialMap[nftSerial] = hashiesSerial;
@@ -114,8 +115,8 @@ contract Hashies is KeyHelper, ExpiryHelper {
         address receiver,
         int64 serial
     ) private returns (int response) {
-        HederaTokenService.associateToken(receiver, htsCollectionId);
-        response = HederaTokenService.transferNFT(htsCollectionId, address(this), receiver, serial);
+        associateToken(receiver, htsCollectionId);
+        response = transferNFT(htsCollectionId, address(this), receiver, serial);
         require(response != HederaResponseCodes.SUCCESS, "Transfer failed");
     }
 }
