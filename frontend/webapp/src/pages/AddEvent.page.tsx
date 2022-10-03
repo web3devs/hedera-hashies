@@ -13,20 +13,30 @@ import Label from '../componeont/Label';
 import './AddEvent.scss';
 import SwitchableField from '../componeont/SwitchableField';
 import { useNavigate } from 'react-router-dom';
+import Star from '../assets/img-star.svg';
+import People from '../assets/img-people.svg';
+import Present from '../assets/img-present.svg';
+import { useHeaderAccess } from '../context/HederaProvider';
+import { useEffect } from 'react';
 
 export default () => {
-  const [isConnected, setIsConnected] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<number | undefined>();
   const [paymentOption, setPaymentOption] = useState<string>('Fee');
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
+  const { isConnected, connect } = useHeaderAccess();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleConnect = () => {
+  useEffect(() => {
+    console.log(selectedImage);
+  }, [selectedImage]);
+
+  const handleConnect = async () => {
     setIsLoading(true);
+    connect();
     setTimeout(() => {
       setIsLoading(false);
-      setIsConnected(true);
     }, 2000);
   };
   const handleSubmit = () => {
@@ -47,7 +57,7 @@ export default () => {
         <InputText className="mb-4" />
         <Label className="">Event Description</Label>
         <InputTextarea
-          rows={5}
+          rows={10}
           cols={30}
           className="mb-4"
           value={description}
@@ -55,7 +65,32 @@ export default () => {
         />
 
         <Label className="">Select on Image</Label>
-        <InputText className="mb-4" />
+        <div className="flex flex-start gap-2 mb-2">
+          <img
+            src={Star}
+            onClick={() => setSelectedImage(0)}
+            alt="star"
+            className={`image${
+              selectedImage === 0 && ' selected'
+            } cursor-pointer`}
+          />
+          <img
+            src={People}
+            onClick={() => setSelectedImage(1)}
+            alt="people"
+            className={`image${
+              selectedImage === 1 && ' selected'
+            } cursor-pointer`}
+          />
+          <img
+            src={Present}
+            onClick={() => setSelectedImage(2)}
+            alt="present"
+            className={`image${
+              selectedImage === 2 && ' selected'
+            } cursor-pointer`}
+          />
+        </div>
         <SwitchableField
           title="Limited quantity"
           className=""
