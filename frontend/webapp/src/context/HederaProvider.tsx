@@ -46,11 +46,10 @@ let hashConnect = new HashConnect(false);
 
 let topic: string | null = null;
 let state: string | null = null;
-let pairingData: HashConnectTypes.SavedPairingData | null = null;
+// let pairingData: HashConnectTypes.SavedPairingData | null = null;
 // let network = null;
 
 export const connect = () => {
-  console.log('connect');
   hashConnect.connectToLocalWallet();
 };
 
@@ -59,6 +58,8 @@ export const clearPairings = () => {
 };
 
 export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
+  const [pairingData, setPairingData] =
+    useState<HashConnectTypes.SavedPairingData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
   useEffect(() => {
@@ -74,7 +75,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       );
       topic = initData.topic;
       const pairingString = initData.pairingString;
-      pairingData = initData.savedPairings[0];
+      setPairingData(initData.savedPairings[0]);
       state = await hashConnect.connect();
     })();
   }, [meta]);
@@ -83,7 +84,10 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
     if (!pairingData?.topic) {
       throw 'no pairing data';
     }
+    console.log('init disconnect');
     await hashConnect.disconnect(pairingData.topic);
+    console.log('disconnect');
+    setPairingData(null);
     setIsConnected(false);
   };
 
@@ -91,7 +95,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
     setIsConnected(connectionStatus === 'Connected');
     if (connectionStatus === 'Disconnected') {
     }
-    pairingData = hashConnect.hcData;
+    setPairingData(hashConnect.hcData);
     if (hashConnect.hcData.pairingData[0]) {
       setIsConnected(true);
       const accountId = hashConnect.hcData.pairingData[0].accountIds[0];

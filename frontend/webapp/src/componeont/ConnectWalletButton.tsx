@@ -4,16 +4,24 @@ import { formatAddress } from '../helpers';
 import './ConnectWalletButton.scss';
 
 export default () => {
-  const { connect, isConnected, accountId } = useHeaderAccess();
+  const { connect, isConnected, accountId, disconnect } = useHeaderAccess();
   const handleConnect = () => connect();
+  const hadnleDisconnect = () => {
+    console.log('disconnect');
+    disconnect();
+  };
   return (
-    <div className="connect-wallet-button">
-      <span
-        className="text-white text-sm"
-        onClick={() => {
-          !isConnected && handleConnect();
-        }}
-      >
+    <div
+      className="connect-wallet-button"
+      onClick={() => {
+        if (!isConnected) {
+          handleConnect();
+        } else {
+          hadnleDisconnect();
+        }
+      }}
+    >
+      <span className="text-white text-sm">
         {!isConnected ? 'Connect Wallet' : `${formatAddress(accountId || '')}`}
       </span>
 
