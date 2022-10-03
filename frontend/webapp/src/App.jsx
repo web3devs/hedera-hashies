@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import './App.scss';
 import AddEventPage from './pages/AddEvent.page';
 import { createBrowserRouter, RouterProvider, Route } from 'react-router-dom';
