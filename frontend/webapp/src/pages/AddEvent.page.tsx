@@ -18,6 +18,7 @@ export default () => {
   const [isConnected, setIsConnected] = useState(false);
   const [paymentOption, setPaymentOption] = useState<string>('Fee');
   const [fromDate, setFromDate] = useState<Date>(new Date());
+  const [description, setDescription] = useState('');
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,7 +46,13 @@ export default () => {
         <Label className="">Event URL</Label>
         <InputText className="mb-4" />
         <Label className="">Event Description</Label>
-        <InputTextarea rows={5} className="mb-4" />
+        <InputTextarea
+          rows={5}
+          cols={30}
+          className="mb-4"
+          value={description}
+          onChange={(e) => setDescription(event.target.value)}
+        />
 
         <Label className="">Select on Image</Label>
         <InputText className="mb-4" />
@@ -88,7 +95,7 @@ export default () => {
           subtitle="Your FLOAT can only be minted if people know the secret code."
         >
           <Label className="">Code</Label>
-          <InputTextarea rows={5} className="mb-8" />
+          <InputText className="mb-2" />
         </SwitchableField>
         <div className="text-left text-sm flex-grow-1 text-white mb-2">
           Payment options

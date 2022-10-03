@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider, Route } from 'react-router-dom';
 import HomePage from './pages/Home.page';
 import NavBar from './componeont/NavBar';
 import ConfirmationPage from './pages/Confirmation.page';
+import { HederaProvider } from './context/HederaProvider';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -22,8 +23,10 @@ const router = createBrowserRouter([
 function App() {
   return (
     <div className="App bg">
-      <NavBar />
-      <RouterProvider router={router} />
+      <HederaProvider>
+        <NavBar />
+        <RouterProvider router={router} />
+      </HederaProvider>
     </div>
   );
 }
