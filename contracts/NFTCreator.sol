@@ -1,75 +1,42 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.5.0 <0.9.0;
+pragma solidity ^0.8.9;
+pragma experimental ABIEncoderV2;
 
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/HederaResponseCodes.sol';
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/IHederaTokenService.sol';
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/HederaTokenService.sol';
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/ExpiryHelper.sol';
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/KeyHelper.sol';
+import "./imports/KeyHelper.sol";
 
-contract NFTCreator is HederaTokenService, KeyHelper, ExpiryHelper {
-    event LogResponseCode(int responseCode);
+contract NFTCreator is KeyHelper {
+    error LogResponseCode(int32 responseCode, address tokenAddress);
+    event TokenCreated(address createdToken, address creator);
 
-    function createNft(
-        string memory name,
-        string memory symbol,
-        string memory memo,
-        int64 maxSupply,
-        uint32 autoRenewPeriod
-    ) external payable returns (address){
+    //  copied from HederaResponseCodes
+    int32 internal constant UNKNOWN = 21; // The responding node has submitted the transaction to the network. Its final status is still unknown.
+    int32 internal constant SUCCESS = 22; // The transaction succeeded
+    // end copied code
 
+    function createNft() external payable {
         IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
         // Set this contract as supply
         keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
 
         IHederaTokenService.HederaToken memory token;
-        token.name = name;
-        token.symbol = symbol;
-        token.memo = memo;
+        token.name = "Foo";
+        token.symbol = "$FOO";
         token.treasury = address(this);
-        token.tokenSupplyType = true; // set supply to FINITE
-        token.maxSupply = maxSupply;
+        token.tokenSupplyType = false; // set supply to infinite
         token.tokenKeys = keys;
         token.freezeDefault = false;
-        token.expiry = createAutoRenewExpiry(address(this), autoRenewPeriod); // Contract automatically renew by himself
 
-        (int responseCode, address createdToken) = createNonFungibleToken(token); // <--- responseCode is UNKNOWN
+        // Copied from HederaTokenService
+        address precompileAddress = address(0x167);
+        // createNonFungibleToken()
+        bytes memory encoded = abi.encodeWithSelector(IHederaTokenService.createNonFungibleToken.selector, token);
+        (bool success, bytes memory result) = precompileAddress.call{value: msg.value}(encoded);
+        (int32 responseCode, address tokenAddress) = success ? abi.decode(result, (int32, address)) : (UNKNOWN, address(0));
+        // End copied code
 
-        if(responseCode != HederaResponseCodes.SUCCESS){
-            revert("Failed to create non-fungible token");
-//            emit LogResponseCode(responseCode);
+        if(responseCode != SUCCESS){
+            revert LogResponseCode(responseCode, tokenAddress);
         }
-        return createdToken;
+        emit TokenCreated(tokenAddress, msg.sender);
     }
-
-    function mintNft(
-        address token,
-        bytes[] memory metadata
-    ) external returns(int64){
-
-        (int response, , int64[] memory serial) = mintToken(token, 0, metadata);
-
-        if(response != HederaResponseCodes.SUCCESS){
-            revert("Failed to mint non-fungible token");
-        }
-
-        return serial[0];
-    }
-
-    function transferNft(
-        address token,
-        address receiver,
-        int64 serial
-    ) external returns(int){
-
-        associateToken(receiver, token);
-        int response = transferNFT(token, address(this), receiver, serial);
-
-        if(response != HederaResponseCodes.SUCCESS){
-            revert("Failed to transfer non-fungible token");
-        }
-
-        return response;
-    }
-
 }

@@ -9,25 +9,26 @@ const {
     TokenCreateTransaction,
     TokenType,
     TokenSupplyType,
-    ContractFunctionParameters,
 } = require("@hashgraph/sdk");
 const {hethers, Contract} = require("@hashgraph/hethers")
+const {formatHbar, parseHbar, formatUnits} = require("@hashgraph/hethers/lib/utils");
 
 async function deployHashiesContract(client) {
     const bytecode = await fs.readFileSync("build/contracts_hashie_sol_Hashies.bin")
 
     // Create contract
     const createContractTx = await new ContractCreateFlow()
-        .setGas(8000000) // Increase if revert
+        .setGas(800_0000) // Increase if revert
         .setBytecode(bytecode) // Contract bytecode
         .setAdminKey(client.operatorPublicKey)
+        .setInitialBalance(69)
         .execute(client)
     const createContractRx = await createContractTx.getReceipt(client);
 
     console.log(`Contract created with ID: ${createContractRx.contractId} \n`);
     logEvents(await createContractTx.getRecord(client), await loadAbi(), "HTSCollectionCreationFailed")
 
-    return createContractRx.contractId;
+   return createContractRx.contractId;
 }
 
 function createClient() {
@@ -50,7 +51,7 @@ async function createHTSCollection(client, hashiesContractId) {
         .setSupplyType(TokenSupplyType.Infinite)
         .setInitialSupply(0)
         // TODO Set the hashies contract as the treasury and admin of the HTS token
-        // .setTreasuryAccountId(hashiesContractz   Address)
+        // .setTreasuryAccountId(hashiesContractAddress)
         // .setSupplyKey(hashiesContractAddress) // Will this work?
         .setTreasuryAccountId(client.operatorAccountId)
         .setSupplyKey(client.operatorPublicKey)
@@ -103,25 +104,23 @@ function logEvents(record, abi, eventName) {
 //     console.log('contract call result:', result)
 // }
 
-async function initializeHashiesContract(client, contractId, hstTokenId) {
+async function initializeHashiesContract(client, contractId) {
     let abi = loadAbi();
 
     const initializeContractTx = await new ContractExecuteTransaction()
         .setContractId(contractId)
-        .setGas(2000000)
-        .setFunction(
-            "setHTSCollectionId",
-            new ContractFunctionParameters()
-                .addAddress(hstTokenId.toSolidityAddress())
-        )
-        .freezeWith(client)
-        .signWithOperator(client)
-    console.log(initializeContractTx)
-    console.log(initializeContractTx.transactionId.toString())
+        .setGas(100000)
+        // .setPayableAmount(200)
+        .setFunction("initialize")
+        // .freezeWith(client)
+        // .signWithOperator(client)
     const rx = await initializeContractTx.execute(client)
-    // logEvents(await initializeContractTx.getRecord(client), abi, "HashiesNFTCreated");
+    const record = await rx.getRecord(client)
+    console.log(record.contractFunctionResult.logs)
+    logEvents(record, abi, "HTSCollectionCreated");
+    logEvents(record, abi, "HTSCollectionCreationFailed");
     const receipt = await rx.getReceipt(client);
-    console.log(receipt)
+    // console.log(receipt)
 }
 
 const main = async () => {
@@ -130,7 +129,7 @@ const main = async () => {
     // const contractId = AccountId.fromString('0.0.48476935')
     // const hstTokenId = await createHTSCollection(client, contractId)
     // const htsTokenId = AccountId.fromString('0.0.48476936')
-    // await initializeHashiesContract(client, contractId, htsTokenId);
+    const tokenId = await initializeHashiesContract(client, contractId);
 
 
 }
