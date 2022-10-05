@@ -13,8 +13,8 @@ struct HashiesCollection {
 }
 
 contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
-    string constant NFT_TOKEN_NAME = "Hashies Participation Token";
-    string constant NFT_SYMBOL = "HASHIES";
+    string constant NFT_TOKEN_NAME = "Hashie Participation Token";
+    string constant NFT_SYMBOL = "HASHIE";
 
     address owner;
 
@@ -50,8 +50,8 @@ contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
         keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
 
         IHederaTokenService.HederaToken memory token;
-        token.name = "Hashie";
-        token.symbol = "HASHIE";
+        token.name = NFT_TOKEN_NAME;
+        token.symbol = NFT_SYMBOL;
         token.treasury = address(this);
         token.memo = 'Set up the HTS NFT that will be used for all Hashies';
         token.tokenSupplyType = false; // set supply to infinite
