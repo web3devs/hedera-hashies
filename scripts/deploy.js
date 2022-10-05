@@ -10,23 +10,25 @@ const {
     TokenType,
     TokenSupplyType,
 } = require("@hashgraph/sdk");
-const {hethers, Contract} = require("@hashgraph/hethers")
-// const {formatHbar, parseHbar, formatUnits} = require("@hashgraph/hethers/lib/utils");
+const {hethers} = require("@hashgraph/hethers")
+
+let abi
 
 async function deployHashiesContract(client) {
     const bytecode = await fs.readFileSync("build/contracts_hashie_sol_Hashies.bin")
 
     // Create contract
-    const createContractTx = await new ContractCreateFlow()
-        .setGas(120_0000) // Increase if revert
+    const response = await new ContractCreateFlow()
+        .setGas(1_000_000) // Increase if revert
         .setBytecode(bytecode) // Contract bytecode
         .setInitialBalance(20)
         .execute(client)
-    const createContractRx = await createContractTx.getReceipt(client);
+    const record = await response.getRecord(client)
+    console.log(`Contract created with ID: ${record.receipt.contractId} \n`);
 
-    console.log(`Contract created with ID: ${createContractRx.contractId} \n`);
+    logEvents(record, 'HTSCollectionCreated')
 
-    return createContractRx.contractId;
+    return record.receipt.contractId;
 }
 
 function createClient() {
@@ -45,7 +47,7 @@ function loadAbi() {
     );
 }
 
-function logEvents(record, abi, eventName) {
+function logEvents(record, eventName) {
     record.contractFunctionResult.logs.forEach(log => {
         // convert the log.data (uint8Array) to a string
         let logStringHex = '0x'.concat(Buffer.from(log.data).toString('hex'));
@@ -55,12 +57,13 @@ function logEvents(record, abi, eventName) {
 
         // decode the event data
         const event = abi.decodeEventLog(eventName, logStringHex, logTopics)
-        console.log(event)
+        console.log(`${eventName} event logged\n${JSON.stringify(event)}\n\n`)
     })
 }
 
 const main = async () => {
     const client = createClient();
+    abi = loadAbi()
     const contractId = await deployHashiesContract(client);
 }
 

@@ -45,13 +45,6 @@ contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
         initialize();
     }
 
-//    function setHTSCollectionId(address _htsCollectionId) external onlyOwner {
-//        require(_htsCollectionId != address(0), "");
-//        htsCollectionId = _htsCollectionId;
-//        emit HTSCollectionAssociated(_htsCollectionId, msg.sender);
-//    }
-
-//    function initialize() external payable onlyOwner {
     function initialize() internal {
         IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
         keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
@@ -68,23 +61,12 @@ contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
 
         (int responseCode, address tokenAddress) = createNonFungibleToken(token);
 
-//         require(responseCode == HederaResponseCodes.SUCCESS, "Failed to create Hashies NFT");
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert HTSCollectionCreationFailed(responseCode);
         }
         emit HTSCollectionCreated(tokenAddress, msg.sender);
         htsCollectionId = tokenAddress;
     }
-
-//    function _createNonFungibleToken(IHederaTokenService.HederaToken memory token) internal returns (int32 responseCode, address tokenAddress) {
-//        if (token.expiry.second == 0 && token.expiry.autoRenewPeriod == 0) {
-//            token.expiry.autoRenewPeriod = defaultAutoRenewPeriod;
-//        }
-//
-//        (bool success, bytes memory result) = precompileAddress
-//            .call{gas: 10000000}(abi.encodeWithSelector(IHederaTokenService.createNonFungibleToken.selector, token));
-//        (responseCode, tokenAddress) = success ? abi.decode(result, (int32, address)) : (HederaResponseCodes.UNKNOWN, address(0));
-//    }
 
     function createNewHashie(
         string memory collectionName,
