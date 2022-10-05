@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.5.0 <0.9.0;
+pragma solidity ^0.8.7;
 
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/HederaResponseCodes.sol';
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/IHederaTokenService.sol';
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/HederaTokenService.sol';
-import '../node_modules/@hashgraph/smart-contracts/contracts/hts-precompile/ExpiryHelper.sol';
+import './imports/HederaTokenService.sol';
+import './imports/KeyHelper.sol';
+import './imports/ExpiryHelper.sol';
 
 struct HashiesCollection {
     address owner;
@@ -13,59 +12,67 @@ struct HashiesCollection {
     uint256 totalSupply;
 }
 
-contract Hashies is KeyHelper, ExpiryHelper {
-    string constant NFT_TOKEN_NAME = "Hashies Participation Token";
-    string constant NFT_SYMBOL = "HASHIES";
-    uint32 constant AUTO_RENEW_EXPIRY = 90 * 24 * 60 * 60;
+contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
+    string constant NFT_TOKEN_NAME = "Hashie Participation Token";
+    string constant NFT_SYMBOL = "HASHIE";
 
     address owner;
 
-    bool initialized;
-    address nftCollectionAddress; // The main non-fungible token where all hashies will live
+    address htsCollectionId; // The main non-fungible token where all hashies will live
 
     mapping(int64 => uint256) collectionSerialMap; // Maps from a token serial number to a the serial number within the collection
     mapping(uint256 => HashiesCollection) collections;
     uint256 totalHashieCollections = 0;
 
-    event HashiesNFTCreated(address nftAddress, address contractOwner);
-    event HashiesCollectionCreated();
+    event HTSCollectionAssociated(address htsCollectionId, address caller);
+    event HTSCollectionCreated(address htsCollectionId, address caller);
+    event HashiesNFTCreated(uint256 collectionId, address caller);
 
-    constructor() {
-        owner = msg.sender;
-        _init();
+    error HTSCollectionCreationFailed(int statusCode);
+
+    modifier onlyOwner() {
+        require(owner == msg.sender, "owner only");
+        _;
     }
 
-    function _init() private {
+    modifier isHtsInitialized() {
+        require(htsCollectionId != address(0), "HST token not initialized");
+        _;
+    }
+
+    constructor() payable {
+        owner = msg.sender;
+        initialize();
+    }
+
+    function initialize() internal {
         IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
-        keys[0] = createSingleKey(HederaTokenService.SUPPLY_KEY_TYPE, CONTRACT_ID_KEY, address(this));
+        keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
 
-        IHederaTokenService.HederaToken memory newNft;
+        IHederaTokenService.HederaToken memory token;
+        token.name = NFT_TOKEN_NAME;
+        token.symbol = NFT_SYMBOL;
+        token.treasury = address(this);
+        token.memo = 'Set up the HTS NFT that will be used for all Hashies';
+        token.tokenSupplyType = false; // set supply to infinite
+        token.tokenKeys = keys;
+        token.freezeDefault = false;
+        token.expiry = createAutoRenewExpiry(address(this), defaultAutoRenewPeriod);
 
-        newNft.name = NFT_TOKEN_NAME;
-        newNft.symbol = NFT_SYMBOL;
-        newNft.treasury = address(this);
-        newNft.tokenSupplyType = false;
-        newNft.tokenKeys = keys;
-        newNft.freezeDefault = false;
-        newNft.expiry = createAutoRenewExpiry(address(this), AUTO_RENEW_EXPIRY);
-
-        (int responseCode, address createdToken) = HederaTokenService.createNonFungibleToken(newNft);
+        (int responseCode, address tokenAddress) = createNonFungibleToken(token);
 
         if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Failed to create Hashie NFT");
+            revert HTSCollectionCreationFailed(responseCode);
         }
-
-        nftCollectionAddress = createdToken;
-
-        emit HashiesNFTCreated(createdToken, msg.sender);
+        emit HTSCollectionCreated(tokenAddress, msg.sender);
+        htsCollectionId = tokenAddress;
     }
 
     function createNewHashie(
         string memory collectionName,
         string memory metadataLink
-    ) external payable returns (uint256 collectionId) {
+    ) external payable isHtsInitialized returns (uint256 collectionId) {
         collectionId = totalHashieCollections;
-
         HashiesCollection memory collection;
         collection.owner = msg.sender;
         collection.name = collectionName;
@@ -78,7 +85,7 @@ contract Hashies is KeyHelper, ExpiryHelper {
     function mintAndTransfer(
         uint256 collectionId,
         address receiver
-    ) external returns (uint256 hashiesSerial, int64 nftSerial) {
+    ) external isHtsInitialized returns (uint256 hashiesSerial, int64 nftSerial) {
         (hashiesSerial, nftSerial) = _mint(collectionId);
         _transfer(receiver, nftSerial);
     }
@@ -89,15 +96,8 @@ contract Hashies is KeyHelper, ExpiryHelper {
         bytes[] memory metadataLink;
         metadataLink[0] = hashiesCollection.metadataLink;
 
-        (int response, , int64[] memory nftSerials) = HederaTokenService.mintToken(
-            nftCollectionAddress,
-            0,
-            metadataLink
-        );
-        if (response != HederaResponseCodes.SUCCESS) {
-            revert("Failed to mint non-fungible token");
-        }
-
+        (int response, , int64[] memory nftSerials) = mintToken(htsCollectionId, 0, metadataLink);
+        require(response != HederaResponseCodes.SUCCESS, "Failed to mint non-fungible token");
         nftSerial = nftSerials[0];
         collectionSerialMap[nftSerial] = hashiesSerial;
         hashiesCollection.totalSupply += 1;
@@ -107,11 +107,8 @@ contract Hashies is KeyHelper, ExpiryHelper {
         address receiver,
         int64 serial
     ) private returns (int response) {
-        HederaTokenService.associateToken(receiver, nftCollectionAddress);
-        response = HederaTokenService.transferNFT(nftCollectionAddress, address(this), receiver, serial);
-
-        if (response != HederaResponseCodes.SUCCESS) {
-            revert("Failed to transfer non-fungible token");
-        }
+        associateToken(receiver, htsCollectionId);
+        response = transferNFT(htsCollectionId, address(this), receiver, serial);
+        require(response != HederaResponseCodes.SUCCESS, "Transfer failed");
     }
 }
