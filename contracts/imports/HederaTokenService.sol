@@ -52,23 +52,6 @@ abstract contract HederaTokenService is HederaResponseCodes {
         : (HederaResponseCodes.UNKNOWN, 0, new int64[](0));
     }
 
-    /// Burns an amount of fungible tokens from the defined treasury account
-    /// @param token The token for which to burn tokens. If token does not exist, transaction results in
-    ///              INVALID_TOKEN_ID
-    /// @param amount  Applicable to tokens of type FUNGIBLE_COMMON. The amount to burn from the Treasury Account.
-    ///                Amount must be a positive non-zero number, not bigger than the token balance of the treasury
-    ///                account (0; balance], represented in the lowest denomination.
-    /// @return responseCode The response code for the status of the request. SUCCESS is 22.
-    /// @return newTotalSupply The new supply of tokens. For NFTs it is the total count of NFTs
-    function burnFungibleToken(address token, uint64 amount) internal
-    returns (int responseCode, uint64 newTotalSupply)
-    {
-        (bool success, bytes memory result) = precompileAddress.call(
-            abi.encodeWithSelector(IHederaTokenService.burnToken.selector,
-            token, amount, int64[]()));
-        (responseCode, newTotalSupply) = success ? abi.decode(result, (int32, uint64)) : (HederaResponseCodes.UNKNOWN, 0);
-    }
-
     /// Burns an amount of the token from the defined treasury account
     /// @param token The token for which to burn tokens. If token does not exist, transaction results in
     ///              INVALID_TOKEN_ID
@@ -78,13 +61,16 @@ abstract contract HederaTokenService is HederaResponseCodes {
     /// @param serialNumbers Applicable to tokens of type NON_FUNGIBLE_UNIQUE. The list of serial numbers to be burned.
     /// @return responseCode The response code for the status of the request. SUCCESS is 22.
     /// @return newTotalSupply The new supply of tokens. For NFTs it is the total count of NFTs
-    function burnNonFungibleToken(address token, int64[] memory serialNumbers) internal
+    function burnToken(address token, uint64 amount, int64[] memory serialNumbers) internal
     returns (int responseCode, uint64 newTotalSupply)
     {
         (bool success, bytes memory result) = precompileAddress.call(
             abi.encodeWithSelector(IHederaTokenService.burnToken.selector,
-            token, uint64(0), serialNumbers));
-        (responseCode, newTotalSupply) = success ? abi.decode(result, (int32, uint64)) : (HederaResponseCodes.UNKNOWN, 0);
+            token, amount, serialNumbers));
+        (responseCode, newTotalSupply) =
+        success
+        ? abi.decode(result, (int32, uint64))
+        : (HederaResponseCodes.UNKNOWN, 0);
     }
 
     ///  Associates the provided account with the provided tokens. Must be signed by the provided

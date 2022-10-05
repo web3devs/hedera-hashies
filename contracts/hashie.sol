@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.7;
 
-import './imports/HederaResponseCodes.sol';
-import './imports/IHederaTokenService.sol';
 import './imports/HederaTokenService.sol';
-import './imports/ExpiryHelper.sol';
 import './imports/KeyHelper.sol';
+import './imports/ExpiryHelper.sol';
 
 struct HashiesCollection {
     address owner;
@@ -44,49 +42,49 @@ contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
 
     constructor() payable {
         owner = msg.sender;
-//        initialize();
+        initialize();
     }
 
-    function setHTSCollectionId(address _htsCollectionId) external onlyOwner {
-        require(_htsCollectionId != address(0), "");
-        htsCollectionId = _htsCollectionId;
-        emit HTSCollectionAssociated(_htsCollectionId, msg.sender);
-    }
+//    function setHTSCollectionId(address _htsCollectionId) external onlyOwner {
+//        require(_htsCollectionId != address(0), "");
+//        htsCollectionId = _htsCollectionId;
+//        emit HTSCollectionAssociated(_htsCollectionId, msg.sender);
+//    }
 
-    function initialize() external onlyOwner {
-//    function initialize() internal {
+//    function initialize() external payable onlyOwner {
+    function initialize() internal {
         IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
         keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
 
-        IHederaTokenService.HederaToken memory newNft;
-        newNft.name = "foo";
-        newNft.symbol = "bar";
-        newNft.treasury = address(this);
-        newNft.memo = 'Set up the HTS NFT that will be used for all Hashies';
-        newNft.tokenSupplyType = false;
-        newNft.freezeDefault = false;
-        newNft.tokenKeys = keys;
-//        newNft.expiry = createAutoRenewExpiry(owner, defaultAutoRenewPeriod);
+        IHederaTokenService.HederaToken memory token;
+        token.name = "Hashie";
+        token.symbol = "HASHIE";
+        token.treasury = address(this);
+        token.memo = 'Set up the HTS NFT that will be used for all Hashies';
+        token.tokenSupplyType = false; // set supply to infinite
+        token.tokenKeys = keys;
+        token.freezeDefault = false;
+        token.expiry = createAutoRenewExpiry(address(this), defaultAutoRenewPeriod);
 
-        (int responseCode, address createdToken) = _createNonFungibleToken(newNft); // <-- responseCode is unknown
+        (int responseCode, address tokenAddress) = createNonFungibleToken(token);
 
 //         require(responseCode == HederaResponseCodes.SUCCESS, "Failed to create Hashies NFT");
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert HTSCollectionCreationFailed(responseCode);
         }
-        emit HTSCollectionCreated(createdToken, msg.sender);
-        htsCollectionId = createdToken;
+        emit HTSCollectionCreated(tokenAddress, msg.sender);
+        htsCollectionId = tokenAddress;
     }
 
-    function _createNonFungibleToken(IHederaTokenService.HederaToken memory token) internal returns (int32 responseCode, address tokenAddress) {
-        if (token.expiry.second == 0 && token.expiry.autoRenewPeriod == 0) {
-            token.expiry.autoRenewPeriod = defaultAutoRenewPeriod;
-        }
-
-        (bool success, bytes memory result) = precompileAddress
-            .call{gas: 10000000}(abi.encodeWithSelector(IHederaTokenService.createNonFungibleToken.selector, token));
-        (responseCode, tokenAddress) = success ? abi.decode(result, (int32, address)) : (HederaResponseCodes.UNKNOWN, address(0));
-    }
+//    function _createNonFungibleToken(IHederaTokenService.HederaToken memory token) internal returns (int32 responseCode, address tokenAddress) {
+//        if (token.expiry.second == 0 && token.expiry.autoRenewPeriod == 0) {
+//            token.expiry.autoRenewPeriod = defaultAutoRenewPeriod;
+//        }
+//
+//        (bool success, bytes memory result) = precompileAddress
+//            .call{gas: 10000000}(abi.encodeWithSelector(IHederaTokenService.createNonFungibleToken.selector, token));
+//        (responseCode, tokenAddress) = success ? abi.decode(result, (int32, address)) : (HederaResponseCodes.UNKNOWN, address(0));
+//    }
 
     function createNewHashie(
         string memory collectionName,

@@ -5,7 +5,6 @@ const {
     Client,
     ContractCreateFlow,
     ContractExecuteTransaction,
-    ContractFunctionParameters,
 } = require('@hashgraph/sdk');
 require('dotenv').config();
 
@@ -35,18 +34,20 @@ async function main() {
     console.log(`Contract created with ID: ${contractId} \n`);
 
     // Call create token
-    const createToken = new ContractExecuteTransaction()
+    const tx = new ContractExecuteTransaction()
         .setContractId(contractId)
-        .setGas(1000000) // Increase if revert
+        .setGas(100_0000) // Increase if revert
         .setPayableAmount(20) // Increase if revert
         .setFunction("createNft");
-    const createTokenTx = await createToken.execute(client);
-    const createTokenRx = await createTokenTx.getRecord(client);
+    const receipt = await tx.execute(client);
+    const record = await receipt.getRecord(client);
 
-    const tokenIdSolidityAddr = createTokenRx.contractFunctionResult.getAddress(0);
+    const tokenIdSolidityAddr = record.contractFunctionResult.getAddress(0);
     const tokenId = AccountId.fromSolidityAddress(tokenIdSolidityAddr);
 
     console.log(`Token created with ID: ${tokenId} \n`);
+
+    // 0x0000000000000000000000000000000000000000000000000000000002e447440000000000000000000000000000000000000000000000000000000002e01f33
 }
 
 main()
