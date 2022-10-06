@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.7;
 
+import './imports/IHederaTokenService.sol';
 import './imports/HederaTokenService.sol';
 import './imports/KeyHelper.sol';
 import './imports/ExpiryHelper.sol';
+import "./imports/FeeHelper.sol";
 
 struct HashiesCollection {
     address owner;

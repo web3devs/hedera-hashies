@@ -2,10 +2,9 @@
 pragma solidity >=0.5.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
-import "./HederaTokenService.sol";
-import "./FeeHelper.sol";
+import "./IHederaTokenService.sol";
 
-contract ExpiryHelper {
+abstract contract ExpiryHelper {
 
     function createAutoRenewExpiry(
         address autoRenewAccount,
