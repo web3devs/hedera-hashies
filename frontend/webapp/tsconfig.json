@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react",
+    "isolatedModules": true,
+    "types": ["vite/client"],
+    "lib": ["ES2021", "dom"]
+  }
+}
