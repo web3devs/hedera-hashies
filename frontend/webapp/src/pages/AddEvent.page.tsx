@@ -21,7 +21,7 @@ import { useEffect } from 'react';
 
 export default () => {
   const [selectedImage, setSelectedImage] = useState<number | undefined>();
-  const [paymentOption, setPaymentOption] = useState<string>('Fee');
+  const [paymentOption, setPaymentOption] = useState<string>('Free');
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
@@ -138,16 +138,16 @@ export default () => {
         <div className="flex flex-column radio-area">
           <div className="flex align-items-center">
             <div className="flex-grow-1 mr-2">
-              <div className="text-white text-sm text-left">Fee</div>
+              <div className="text-white text-sm text-left">Free</div>
               <div className="text-xs text-left">
                 Your HASHIE is currently free.
               </div>
             </div>
             <RadioButton
               name="paymentOption"
-              value="Fee"
+              value="Free"
               onChange={(e) => setPaymentOption(e.value)}
-              checked={paymentOption === 'Fee'}
+              checked={paymentOption === 'Free'}
             />
           </div>
           <div className="flex align-items-center">

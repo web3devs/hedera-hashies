@@ -6,7 +6,7 @@ import './ConnectWalletButton.scss';
 export default () => {
   const { connect, isConnected, accountId, disconnect } = useHeaderAccess();
   const handleConnect = () => connect();
-  const hadnleDisconnect = () => {
+  const handleDisconnect = () => {
     console.log('disconnect');
     disconnect();
   };
@@ -17,7 +17,7 @@ export default () => {
         if (!isConnected) {
           handleConnect();
         } else {
-          hadnleDisconnect();
+          handleDisconnect();
         }
       }}
     >
