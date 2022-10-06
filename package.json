@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "A proof of participation token platform for Hedera",
   "scripts": {
-    "build":  "solcjs contracts/hashie.sol -o build --optimize --bin && solcjs contracts/hashie.sol -o build --abi",
+    "build": "solcjs contracts/hashie.sol -o build --optimize --bin && solcjs contracts/hashie.sol -o build --abi",
     "deploy": "node scripts/deploy.js"
   },
   "author": "",

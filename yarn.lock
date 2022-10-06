@@ -349,7 +349,7 @@
 
 "@hashgraph/hethers@^1.2.2":
   version "1.2.2"
-  resolved "https://registry.npmjs.org/@hashgraph/hethers/-/hethers-1.2.2.tgz"
+  resolved "https://registry.yarnpkg.com/@hashgraph/hethers/-/hethers-1.2.2.tgz#9ea6bf64946f023220e1d312f043ffa9efcac906"
   integrity sha512-nQkYYJ35xUJSAVv/80lj3zA1YhjQIklVj3sZeC/RYHt+k8vhJsKx+NJQEd0LXMUWLk07+r8cvMPcVIUvPieHIg==
   dependencies:
     "@ethersproject/solidity" "5.5.0"
@@ -393,10 +393,6 @@
     long "^4.0.0"
     protobufjs "^6.11.3"
     utf8 "^3.0.0"
-
-"@hashgraph/smart-contracts@hashgraph/hedera-smart-contracts#d0984fcf3ea7a2df85cf679e30387b1befc61d45":
-  version "0.1.0"
-  resolved "https://codeload.github.com/hashgraph/hedera-smart-contracts/tar.gz/d0984fcf3ea7a2df85cf679e30387b1befc61d45"
 
 "@hethers/abstract-provider@1.2.0":
   version "1.2.0"
