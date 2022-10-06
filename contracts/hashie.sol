@@ -14,7 +14,9 @@ struct HashiesCollection {
     uint256 totalSupply;
 }
 
-contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
+contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
+    using Bits for uint256;
+
     string constant NFT_TOKEN_NAME = "Hashie Participation Token";
     string constant NFT_SYMBOL = "HASHIE";
 
@@ -48,8 +50,21 @@ contract Hashies is HederaTokenService, KeyHelper, ExpiryHelper {
     }
 
     function initialize() internal {
+        // Set all of the keys to this contract so that access control can be managed here
         IHederaTokenService.TokenKey[] memory keys = new IHederaTokenService.TokenKey[](1);
-        keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
+        uint256 keyType;
+        keyType = keyType.setBit(uint8(KeyType.SUPPLY));
+        keyType = keyType.setBit(uint8(KeyType.ADMIN));
+        keyType = keyType.setBit(uint8(KeyType.WIPE));
+        keyType = keyType.setBit(uint8(KeyType.PAUSE));
+//        keyType = keyType.setBit(uint8(KeyType.FEE)); // TODO Does it make sense to charge a small fee?
+        keyType = keyType.setBit(uint8(KeyType.FREEZE));
+        keyType = keyType.setBit(uint8(KeyType.KYC));
+
+        keys[0] = IHederaTokenService.TokenKey(
+            keyType,
+            getKeyValueType(KeyValueType.CONTRACT_ID, address(this))
+        );
 
         IHederaTokenService.HederaToken memory token;
         token.name = NFT_TOKEN_NAME;
