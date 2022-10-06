@@ -12,15 +12,21 @@ const {
 } = require("@hashgraph/sdk");
 const {hethers} = require("@hashgraph/hethers")
 
-let abi
+const HASHIE_BIN_FILE = "build/contracts_hashie_sol_Hashie.bin";
+const HASHIE_ABI_FILE = 'build/contracts_hashie_sol_Hashie.abi';
 
-async function deployHashiesContract(client) {
-    const bytecode = await fs.readFileSync("build/contracts_hashie_sol_Hashies.bin")
+const bytecode = fs.readFileSync(HASHIE_BIN_FILE)
+const abi = new hethers.utils.Interface(fs.readFileSync(HASHIE_ABI_FILE, 'utf8'))
 
+const client = Client
+    .forTestnet()
+    .setOperator(AccountId.fromString(process.env.MY_ACCOUNT_ID), PrivateKey.fromString(process.env.MY_PRIVATE_KEY))
+
+async function deployHashiesContract() {
     // Create contract
     const response = await new ContractCreateFlow()
-        .setGas(1_000_000) // Increase if revert
-        .setBytecode(bytecode) // Contract bytecode
+        .setGas(400_000)
+        .setBytecode(bytecode)
         .setInitialBalance(20)
         .execute(client)
     const record = await response.getRecord(client)
@@ -29,22 +35,6 @@ async function deployHashiesContract(client) {
     logEvents(record, 'HTSCollectionCreated')
 
     return record.receipt.contractId;
-}
-
-function createClient() {
-    const client = Client.forTestnet();
-    client
-        .setOperator(
-            AccountId.fromString(process.env.MY_ACCOUNT_ID),
-            PrivateKey.fromString(process.env.MY_PRIVATE_KEY)
-        )
-    return client;
-}
-
-function loadAbi() {
-    return new hethers.utils.Interface(
-        fs.readFileSync('build/contracts_hashie_sol_Hashies.abi', 'utf8')
-    );
 }
 
 function logEvents(record, eventName) {
@@ -62,9 +52,7 @@ function logEvents(record, eventName) {
 }
 
 const main = async () => {
-    const client = createClient();
-    abi = loadAbi()
-    const contractId = await deployHashiesContract(client);
+    const contractId = await deployHashiesContract();
 }
 
 main()
