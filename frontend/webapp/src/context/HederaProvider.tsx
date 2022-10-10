@@ -1,7 +1,7 @@
 import React, {createContext, ReactNode, useContext, useEffect, useMemo, useState} from 'react';
 import {HashConnect, HashConnectTypes} from 'hashconnect';
 import {HashConnectProvider} from "hashconnect/dist/provider";
-import {HashConnectSigner} from "hashconnect/dist/provider/signer";
+import {HashConnectSigner} from "hashconnect/dist/esm/provider/signer";
 import {Contract, hethers} from "@hashgraph/hethers";
 import HashieConfig from "../settings.json";
 
@@ -20,7 +20,8 @@ interface HederaAccessContextType {
   connect: () => unknown;
   disconnect: () => Promise<unknown>;
   provider: HashConnectProvider,
-  contract: Contract
+  contract: Contract,
+  hashConnect: HashConnect,
 }
 
 const HeaderAccessContext = createContext<HederaAccessContextType>({
@@ -31,7 +32,8 @@ const HeaderAccessContext = createContext<HederaAccessContextType>({
   },
   disconnect: () => new Promise<void>(() => {}),
   provider: null,
-  contract: null
+  contract: null,
+  hashConnect: null,
 });
 
 export const useHeaderAccess = () => useContext(HeaderAccessContext);
@@ -139,6 +141,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       disconnect,
       provider,
       contract,
+      hashConnect,
     }),
     [isConnected]
   );
