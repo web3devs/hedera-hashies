@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Button,
   Calendar,
@@ -18,16 +18,17 @@ import People from '../assets/img-people.svg';
 import Present from '../assets/img-present.svg';
 import { useHeaderAccess } from '../context/HederaProvider';
 import { useEffect } from 'react';
-import {MessageTypes} from "hashconnect";
-import {hethers} from "@hashgraph/hethers";
+import {ContractExecuteTransaction, ContractFunctionParameters} from "@hashgraph/sdk";
+import HashieConfig from "../settings.json";
 
 export default () => {
+  const [eventName, setEventName] = useState<string>('')
   const [selectedImage, setSelectedImage] = useState<number | undefined>();
   const [paymentOption, setPaymentOption] = useState<string>('Free');
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
-  const { isConnected, connect, provider, contract } = useHeaderAccess();
+  const { isConnected, connect, signer } = useHeaderAccess();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -41,16 +42,23 @@ export default () => {
       setIsLoading(false);
     }, 2000);
   };
+
   const handleSubmit = async () => {
     setIsLoading(true);
 
-    if (contract) {
-      console.log("calling contract")
-      const result = await contract.function.createEvent('foo', 'bar')
-      console.log(result)
-    } else {
-      console.log('contract is null')
-    }
+    const tx = await new ContractExecuteTransaction()
+        .setContractId(HashieConfig.address)
+        .setFunction(
+            'createEvent',
+            new ContractFunctionParameters()
+                .addString(eventName)
+                .addString('bar')
+        )
+        .setGas(900000)
+        .freezeWithSigner(signer)
+
+    const result = await tx.executeWithSigner(signer)
+    // console.log(result)
 
     setIsLoading(false)
     // navigate('/confirmation/032f75b3ca02a393196a818328bd32e8');
@@ -61,7 +69,11 @@ export default () => {
       <h1 className="text-2xl font-bold text-white">Create a new event</h1>
       <Card className="flex flex-column add-event">
         <Label className="">Event Name</Label>
-        <InputText className="mb-4" />
+        <InputText
+            value={eventName}
+            onChange={e => setEventName(e.target.value)}
+            className="mb-4"
+        />
         <Label className="">Event URL</Label>
         <InputText className="mb-4" />
         <Label className="">Event Description</Label>
@@ -70,7 +82,7 @@ export default () => {
           cols={30}
           className="mb-4"
           value={description}
-          onChange={(e) => setDescription(event.target.value)}
+          onChange={(e) => setDescription(e.target.value)}
         />
 
         <Label className="">Select on Image</Label>
