@@ -20,6 +20,7 @@ import { useHeaderAccess } from '../context/HederaProvider';
 import { useEffect } from 'react';
 import {ContractExecuteTransaction, ContractFunctionParameters} from "@hashgraph/sdk";
 import HashieConfig from "../settings.json";
+import BigNumber from "bignumber.js";
 
 export default () => {
   const [eventName, setEventName] = useState<string>('')
@@ -43,14 +44,18 @@ export default () => {
     }, 2000);
   };
 
+  const generateEventId = () => BigNumber('0x032f75b3ca02a393196a818328bd32e8') // TODO Use hash of name? Random number?
+
   const handleSubmit = async () => {
     setIsLoading(true);
 
+    const eventId = generateEventId();
     const tx = await new ContractExecuteTransaction()
         .setContractId(HashieConfig.address)
         .setFunction(
             'createEvent',
             new ContractFunctionParameters()
+                .addUint256(eventId)
                 .addString(eventName)
                 .addString('bar')
         )
@@ -61,7 +66,8 @@ export default () => {
     // console.log(result)
 
     setIsLoading(false)
-    // navigate('/confirmation/032f75b3ca02a393196a818328bd32e8');
+
+    navigate(`/confirmation/${eventId}`);
   };
 
   return (
