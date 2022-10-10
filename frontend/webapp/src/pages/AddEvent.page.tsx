@@ -18,6 +18,8 @@ import People from '../assets/img-people.svg';
 import Present from '../assets/img-present.svg';
 import { useHeaderAccess } from '../context/HederaProvider';
 import { useEffect } from 'react';
+import {MessageTypes} from "hashconnect";
+import {hethers} from "@hashgraph/hethers";
 
 export default () => {
   const [selectedImage, setSelectedImage] = useState<number | undefined>();
@@ -25,7 +27,7 @@ export default () => {
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
-  const { isConnected, connect } = useHeaderAccess();
+  const { isConnected, connect, provider, contract } = useHeaderAccess();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -39,12 +41,19 @@ export default () => {
       setIsLoading(false);
     }, 2000);
   };
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate('/confirmation/032f75b3ca02a393196a818328bd32e8');
-    }, 3000);
+
+    if (contract) {
+      console.log("calling contract")
+      const result = await contract.function.createEvent('foo', 'bar')
+      console.log(result)
+    } else {
+      console.log('contract is null')
+    }
+
+    setIsLoading(false)
+    // navigate('/confirmation/032f75b3ca02a393196a818328bd32e8');
   };
 
   return (

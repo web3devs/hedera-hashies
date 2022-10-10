@@ -7,7 +7,7 @@ import './imports/KeyHelper.sol';
 import './imports/ExpiryHelper.sol';
 import "./imports/FeeHelper.sol";
 
-struct HashiesCollection {
+    struct HashiesCollection {
     address owner;
     string name;
     bytes metadataLink;
@@ -85,7 +85,16 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         htsCollectionId = tokenAddress;
     }
 
-    function createNewHashie(
+    /// Retrieves non-fungible specific token info for a given NFT
+    /// @param token The ID of the token as a solidity address
+    function getHashieInfo(address token, int64 serialNumber) internal returns (int responseCode, IHederaTokenService.NonFungibleTokenInfo memory tokenInfo) {
+        (bool success, bytes memory result) = precompileAddress.call(
+            abi.encodeWithSelector(IHederaTokenService.getNonFungibleTokenInfo.selector, token, serialNumber));
+        IHederaTokenService.NonFungibleTokenInfo memory defaultTokenInfo;
+        (responseCode, tokenInfo) = success ? abi.decode(result, (int32, IHederaTokenService.NonFungibleTokenInfo)) : (HederaResponseCodes.UNKNOWN, defaultTokenInfo);
+    }
+
+    function createEvent(
         string memory collectionName,
         string memory metadataLink
     ) external payable isHtsInitialized returns (uint256 collectionId) {

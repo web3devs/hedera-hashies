@@ -1,13 +1,9 @@
-import React from 'react';
-import { HashConnect, HashConnectTypes } from 'hashconnect';
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useState
-} from 'react';
+import React, {createContext, ReactNode, useContext, useEffect, useMemo, useState} from 'react';
+import {HashConnect, HashConnectTypes} from 'hashconnect';
+import {HashConnectProvider} from "hashconnect/dist/provider";
+import {HashConnectSigner} from "hashconnect/dist/provider/signer";
+import {Contract, hethers} from "@hashgraph/hethers";
+import HashieConfig from "../settings.json";
 
 export type Network = 'testnet' | 'mainnet' | 'previewnet';
 
@@ -23,6 +19,8 @@ interface HederaAccessContextType {
   isConnected: boolean;
   connect: () => unknown;
   disconnect: () => Promise<unknown>;
+  provider: HashConnectProvider,
+  contract: Contract
 }
 
 const HeaderAccessContext = createContext<HederaAccessContextType>({
@@ -31,7 +29,9 @@ const HeaderAccessContext = createContext<HederaAccessContextType>({
   connect: () => {
     // NOOP
   },
-  disconnect: () => new Promise<void>(() => {})
+  disconnect: () => new Promise<void>(() => {}),
+  provider: null,
+  contract: null
 });
 
 export const useHeaderAccess = () => useContext(HeaderAccessContext);
@@ -57,11 +57,19 @@ export const clearPairings = () => {
   hashConnect.clearConnectionsAndData();
 };
 
+const contractWithSigner = (signer: HashConnectSigner): Contract => {
+  const contract = new Contract(HashieConfig.address, HashieConfig.abi)
+  console.log(contract)
+  return contract
+}
+
 export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
   const [pairingData, setPairingData] =
     useState<HashConnectTypes.SavedPairingData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [provider, setProvider] = useState(null);
+  const [contract, setContract] = useState<Contract | null>(null);
   useEffect(() => {
     (async () => {
       let initData = await hashConnect.init(
@@ -77,6 +85,12 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       const pairingString = initData.pairingString;
       setPairingData(initData.savedPairings[0]);
       state = await hashConnect.connect();
+      const hcProvider = hashConnect.getProvider('testnet', topic, accountId);
+      const hcSigner = hashConnect.getSigner(hcProvider);
+      const hcContract = contractWithSigner(hcSigner);
+      setProvider(hcProvider);
+      console.log('setting contract', hcContract)
+      setContract(hcContract)
     })();
   }, [meta]);
 
@@ -89,6 +103,8 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
     console.log('disconnect');
     setPairingData(null);
     setIsConnected(false);
+    setProvider(null);
+    setContract(null);
   };
 
   hashConnect.connectionStatusChangeEvent.on(async (connectionStatus) => {
@@ -100,13 +116,30 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       setIsConnected(true);
       const accountId = hashConnect.hcData.pairingData[0].accountIds[0];
       setAccountId(accountId);
+      const hcProvider = hashConnect.getProvider('testnet', topic, accountId);
+      const hcSigner = hashConnect.getSigner(hcProvider);
+      const hcContract = contractWithSigner(hcSigner);
+      setProvider(hcProvider);
+      console.log('setting contract', hcContract)
+      setContract(hcContract)
+
     } else {
       setIsConnected(false);
+      setProvider(null);
+      setContract(null);
+
     }
   });
 
   const value = useMemo(
-    () => ({ accountId, isConnected, connect, disconnect }),
+    () => ({
+      accountId,
+      isConnected,
+      connect,
+      disconnect,
+      provider,
+      contract,
+    }),
     [isConnected]
   );
   return (
