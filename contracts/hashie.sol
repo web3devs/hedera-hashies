@@ -7,11 +7,13 @@ import './imports/KeyHelper.sol';
 import './imports/ExpiryHelper.sol';
 import "./imports/FeeHelper.sol";
 
-    struct HashiesCollection {
+struct HashiesCollection {
     address owner;
     string name;
     bytes metadataLink;
-    uint256 totalSupply;
+    uint256 maxSupply;
+    uint256 nextSerial;
+    int64[] nftSerialMap;
 }
 
 contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
@@ -24,9 +26,9 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
 
     address htsCollectionId; // The main non-fungible token where all hashies will live
 
-    mapping(int64 => uint256) collectionSerialMap; // Maps from a token serial number to a the serial number within the collection
+    mapping(int64 => uint256) nftSerialMap; // Maps from a token serial number to a the serial number within the collection
     mapping(uint256 => HashiesCollection) collections;
-    uint256 totalHashieCollections = 0;
+    uint256 collectionsCount = 0;
 
     event HTSCollectionAssociated(address htsCollectionId, address caller);
     event HTSCollectionCreated(address htsCollectionId, address caller);
@@ -41,6 +43,16 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
 
     modifier isHtsInitialized() {
         require(htsCollectionId != address(0), "HST token not initialized");
+        _;
+    }
+
+    modifier isUniqueEventId(uint256 id) {
+        require(collections[id].owner == address(0), "eventId must be unique");
+        _;
+    }
+
+    modifier isKnownEventId(uint256 id) {
+        require(collections[id].owner != address(0), "unknown eventId");
         _;
     }
 
@@ -94,39 +106,40 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         (responseCode, tokenInfo) = success ? abi.decode(result, (int32, IHederaTokenService.NonFungibleTokenInfo)) : (HederaResponseCodes.UNKNOWN, defaultTokenInfo);
     }
 
-    function createEvent(
-        string memory collectionName,
+    function createCollection(
+        uint256 id,
+        string memory name,
         string memory metadataLink
-    ) external payable isHtsInitialized returns (uint256 collectionId) {
-        collectionId = totalHashieCollections;
+    ) external payable isHtsInitialized isUniqueEventId(id) {
         HashiesCollection memory collection;
         collection.owner = msg.sender;
-        collection.name = collectionName;
+        collection.name = name;
         collection.metadataLink = bytes(metadataLink);
 
-        collections[collectionId] = collection;
-        totalHashieCollections += 1;
+        collections[id] = collection;
+        collectionsCount += 1;
     }
 
-    function mintAndTransfer(
+    function mint(
         uint256 collectionId,
         address receiver
-    ) external isHtsInitialized returns (uint256 hashiesSerial, int64 nftSerial) {
+    ) external isHtsInitialized isKnownEventId(collectionId) returns (uint256 hashiesSerial, int64 nftSerial) {
         (hashiesSerial, nftSerial) = _mint(collectionId);
         _transfer(receiver, nftSerial);
     }
 
     function _mint(uint256 collectionId) private returns (uint256 hashiesSerial, int64 nftSerial) {
-        HashiesCollection memory hashiesCollection = collections[collectionId];
-        hashiesSerial = hashiesCollection.totalSupply;
+        HashiesCollection storage hashiesCollection = collections[collectionId];
+        hashiesSerial = hashiesCollection.nextSerial;
         bytes[] memory metadataLink;
         metadataLink[0] = hashiesCollection.metadataLink;
 
         (int response, , int64[] memory nftSerials) = mintToken(htsCollectionId, 0, metadataLink);
         require(response != HederaResponseCodes.SUCCESS, "Failed to mint non-fungible token");
         nftSerial = nftSerials[0];
-        collectionSerialMap[nftSerial] = hashiesSerial;
-        hashiesCollection.totalSupply += 1;
+        nftSerialMap[nftSerial] = hashiesSerial;
+        hashiesCollection.nftSerialMap.push(nftSerial);
+        hashiesCollection.nextSerial += 1;
     }
 
     function _transfer(
