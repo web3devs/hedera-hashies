@@ -1,17 +1,15 @@
 import { Button } from 'primereact/button';
 import React from 'react';
-import { useParams } from 'react-router-dom';
 
 import Card from '../componeont/Card';
 import Star from '../assets/img-star.svg';
 import './Confirmation.scss';
 
-export default () => {
-  const params = useParams();
+const Confirmation = () => {
   return (
     <div className="flex justify-content-center align-items-center">
       <Card className="w-7 grid grid-nogutter">
-        <img src={Star} alt="image" className="col-3" />
+        <img src={Star} alt="event" className="col-3" />
         <div className="text-lg text-left text-white col-9 pl-4">
           Matrix World AMA: Jacob Tucker | Emerald City
         </div>
@@ -50,3 +48,5 @@ export default () => {
     </div>
   );
 };
+
+export default Confirmation;

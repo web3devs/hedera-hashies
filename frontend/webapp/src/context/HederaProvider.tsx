@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { HashConnect, HashConnectTypes } from 'hashconnect/dist/cjs/main';
 import {
   createContext,
@@ -44,8 +44,8 @@ interface HederaProviderProps {
 
 let hashConnect = new HashConnect(false);
 
-let topic: string | null = null;
-let state: string | null = null;
+// let topic: string | null = null;
+// let state: string | null = null;
 // let pairingData: HashConnectTypes.SavedPairingData | null = null;
 // let network = null;
 
@@ -73,21 +73,22 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
         'testnet',
         true
       );
-      topic = initData.topic;
-      const pairingString = initData.pairingString;
+      // topic = initData.topic;
+      // const pairingString = initData.pairingString;
       setPairingData(initData.savedPairings[0]);
-      state = await hashConnect.connect();
+      // state =
+      await hashConnect.connect();
     })();
   }, [meta]);
 
-  const disconnect = async () => {
+  const disconnect = useCallback(async () => {
     if (!pairingData?.topic) {
-      throw 'no pairing data';
+      throw new Error('no pairing data');
     }
     await hashConnect.disconnect(pairingData.topic);
     setPairingData(null);
     setIsConnected(false);
-  };
+  }, [pairingData?.topic]);
 
   hashConnect.connectionStatusChangeEvent.on(async (connectionStatus) => {
     setIsConnected(connectionStatus === 'Connected');
@@ -105,7 +106,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
 
   const value = useMemo(
     () => ({ accountId, isConnected, connect, disconnect }),
-    [isConnected]
+    [isConnected, accountId, disconnect]
   );
   return (
     <HeaderAccessContext.Provider value={value}>
