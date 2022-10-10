@@ -20,6 +20,8 @@ import { useHeaderAccess } from '../context/HederaProvider';
 import { useEffect } from 'react';
 import {MessageTypes} from "hashconnect";
 import {hethers} from "@hashgraph/hethers";
+import { TransactionId, AccountId, ContractCallQuery, ContractExecuteTransaction, ContractFunctionParameters, Hbar } from '@hashgraph/sdk';
+import HashieConfig from "../settings.json";
 
 export default () => {
   const [selectedImage, setSelectedImage] = useState<number | undefined>();
@@ -27,7 +29,7 @@ export default () => {
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
-  const { isConnected, connect, provider, contract } = useHeaderAccess();
+  const { isConnected, connect, provider, contract, hashConnect } = useHeaderAccess();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -41,16 +43,55 @@ export default () => {
       setIsLoading(false);
     }, 2000);
   };
+
   const handleSubmit = async () => {
     setIsLoading(true);
 
-    if (contract) {
-      console.log("calling contract")
-      const result = await contract.function.createEvent('foo', 'bar')
-      console.log(result)
-    } else {
-      console.log('contract is null')
+    const data = JSON.parse(localStorage.getItem('hashconnectData'));
+
+    let trans = new ContractExecuteTransaction()
+      .setContractId(HashieConfig.address)
+      .setGas(10000000)
+      .setPayableAmount(new Hbar(10))
+      .setFunction("createEvent", new ContractFunctionParameters().addString("foo").addString('bar'))
+      // .setMaxQueryPayment(new Hbar(0.00000001));
+      .setMaxTransactionFee(new Hbar(1.75));
+
+    let transId = TransactionId.generate(data.pairingData[0].accountIds[0]);
+    console.log('transId:', transId);
+    trans.setTransactionId(transId);
+    trans.setNodeAccountIds([new AccountId(3)]);
+
+    await trans.freeze();
+
+    let transBytes = trans.toBytes();
+
+    const transaction: MessageTypes.Transaction = {
+      topic: data.topic,
+      byteArray: transBytes,
+      metadata: {
+        accountToSign: data.pairingData[0].accountIds[0],
+        returnTransaction: false,
+        hideNft: false
+      }
     }
+
+    console.log('trans: ', transaction);
+
+    const r = await hashConnect.sendTransaction(data.topic, transaction);
+
+    console.log('R: ', r);
+
+
+
+
+    // if (contract) {
+    //   console.log("calling contract")
+    //   const result = await contract.functions.createEvent('foo', 'bar')
+    //   console.log(result)
+    // } else {
+    //   console.log('contract is null')
+    // }
 
     setIsLoading(false)
     // navigate('/confirmation/032f75b3ca02a393196a818328bd32e8');
