@@ -17,7 +17,7 @@ import { useHeaderAccess } from '../context/HederaProvider';
 
 import './AddEvent.scss';
 
-const AddEvent = () => {
+export default () => {
   const [selectedImage, setSelectedImage] = useState<number | undefined>();
   const [paymentOption, setPaymentOption] = useState<string>('Free');
   const [fromDate, setFromDate] = useState<Date>(new Date());
@@ -55,7 +55,7 @@ const AddEvent = () => {
           cols={30}
           className="mb-4"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => setDescription(event.target.value)}
         />
 
         <Label className="">Select on Image</Label>
@@ -179,5 +179,3 @@ const AddEvent = () => {
     </div>
   );
 };
-
-export default AddEvent;

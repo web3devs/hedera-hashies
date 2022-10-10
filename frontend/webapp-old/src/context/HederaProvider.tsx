@@ -93,7 +93,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
     setIsConnected(connectionStatus === 'Connected');
     if (connectionStatus === 'Disconnected') {
     }
-    setPairingData(hashConnect.hcData.pairingData[0]);
+    setPairingData(hashConnect.hcData);
     if (hashConnect.hcData.pairingData[0]) {
       setIsConnected(true);
       const accountId = hashConnect.hcData.pairingData[0].accountIds[0];

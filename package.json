@@ -1,5 +1,5 @@
 {
-  "name": "hedera-hashie",
+  "name": "hedera-poap",
   "version": "0.0.1",
   "description": "A proof of participation token platform for Hedera",
   "scripts": {
@@ -12,6 +12,7 @@
     "@hashgraph/hethers": "^1.2.2",
     "@hashgraph/sdk": "^2.18.1",
     "@openzeppelin/contracts": "^4.7.3",
-    "dotenv": "^16.0.2"
+    "dotenv": "^16.0.2",
+    "@hashgraph/smart-contracts": "hashgraph/hedera-smart-contracts"
   }
 }

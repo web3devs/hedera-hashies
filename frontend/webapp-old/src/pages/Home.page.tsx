@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import InfoCard from '../componeont/home/InfoCard';
 import './Home.scss';
-const Home = () => {
+export default () => {
   const navigate = useNavigate();
   return (
     <div className="home">
@@ -25,5 +25,3 @@ const Home = () => {
     </div>
   );
 };
-
-export default Home;

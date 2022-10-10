@@ -3,7 +3,7 @@ import { useHeaderAccess } from '../context/HederaProvider';
 import { formatAddress } from '../helpers';
 import './ConnectWalletButton.scss';
 
-const ConnectWalletButton = () => {
+export default () => {
   const { connect, isConnected, accountId, disconnect } = useHeaderAccess();
   const handleConnect = () => connect();
   const handleDisconnect = () => {
@@ -29,5 +29,3 @@ const ConnectWalletButton = () => {
     </div>
   );
 };
-
-export default ConnectWalletButton;

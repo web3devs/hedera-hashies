@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.scss';
 import AddEventPage from './pages/AddEvent.page';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Route } from 'react-router-dom';
 import HomePage from './pages/Home.page';
 import NavBar from './componeont/NavBar';
 import ConfirmationPage from './pages/Confirmation.page';
 import { HederaProvider } from './context/HederaProvider';
-
 const router = createBrowserRouter([
   {
     path: '/',
@@ -21,7 +20,7 @@ const router = createBrowserRouter([
     element: <ConfirmationPage />
   }
 ]);
-const App = () => {
+function App() {
   return (
     <div className="App bg">
       <HederaProvider>
@@ -30,6 +29,6 @@ const App = () => {
       </HederaProvider>
     </div>
   );
-};
+}
 
 export default App;

@@ -2,7 +2,7 @@ import React from 'react';
 
 import './InfoCard.scss';
 
-const InfoCard = () => {
+export default () => {
   return (
     <div className="info-card flex p-4">
       <div className="flex-grow-1 flex flex-column mb-4">
@@ -16,5 +16,3 @@ const InfoCard = () => {
     </div>
   );
 };
-
-export default InfoCard;

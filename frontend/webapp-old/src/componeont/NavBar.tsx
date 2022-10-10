@@ -2,7 +2,7 @@ import React from 'react';
 import ConnectWalletButton from './ConnectWalletButton';
 import Logo from './Logo';
 
-const NavBar = () => {
+export default () => {
   return (
     <div className="flex justify-content-between align-items-center z-1 p-4">
       <div
@@ -18,5 +18,3 @@ const NavBar = () => {
     </div>
   );
 };
-
-export default NavBar;
