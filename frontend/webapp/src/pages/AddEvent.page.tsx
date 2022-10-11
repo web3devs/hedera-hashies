@@ -53,7 +53,7 @@ const AddEvent = () => {
     try {
       setIsLoading(true)
 
-      const t = await storeNFT(selectedImage, 'Lorem', 'Ipsum')
+      const t = await storeNFT(selectedImage, eventName, description)
       const metadataURL = `https://ipfs.io/ipfs/${t.ipnft}/metadata.json`
       console.log('metadataURL: ', metadataURL)
 
