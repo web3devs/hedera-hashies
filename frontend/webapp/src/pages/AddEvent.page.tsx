@@ -21,6 +21,7 @@ import { useEffect } from 'react';
 import {ContractExecuteTransaction, ContractFunctionParameters} from "@hashgraph/sdk";
 import HashieConfig from "../settings.json";
 import BigNumber from "bignumber.js";
+import {hashMessage} from "@hashgraph/hethers/lib.esm/utils";
 
 export default () => {
   const [eventName, setEventName] = useState<string>('')
@@ -31,6 +32,7 @@ export default () => {
   const navigate = useNavigate();
   const { isConnected, connect, signer } = useHeaderAccess();
   const [isLoading, setIsLoading] = useState(false);
+  const [eventId, setEventId] = useState<BigNumber>(null)
 
   useEffect(() => {
     console.log(selectedImage);
@@ -44,30 +46,30 @@ export default () => {
     }, 2000);
   };
 
-  const generateEventId = () => BigNumber('0x032f75b3ca02a393196a818328bd32e8') // TODO Use hash of name? Random number?
+  const generateEventId = () => BigNumber(hashMessage(signer.getAccountId() + eventName))
 
   const handleSubmit = async () => {
     setIsLoading(true);
 
-    const eventId = generateEventId();
+    const _eventId = generateEventId();
+
+    // TODO Put the rest of the settings into JSON and store it to IPFS
     const tx = await new ContractExecuteTransaction()
         .setContractId(HashieConfig.address)
         .setFunction(
-            'createEvent',
-            new ContractFunctionParameters()
-                .addUint256(eventId)
-                .addString(eventName)
-                .addString('bar')
+          'createCollection',
+          new ContractFunctionParameters()
+              .addUint256(_eventId)
+              .addString(eventName)
+              .addString('https://hashie.net') // TODO Use the IPFS url here
         )
-        .setGas(900000)
+        .setGas(900000) // TODO Use a gas calculator
         .freezeWithSigner(signer)
 
     const result = await tx.executeWithSigner(signer)
-    // console.log(result)
 
     setIsLoading(false)
-
-    navigate(`/confirmation/${eventId}`);
+    setEventId(_eventId)
   };
 
   return (
@@ -199,6 +201,7 @@ export default () => {
             className="submit mt-4"
             loading={isLoading}
             onClick={handleSubmit}
+            disabled={eventId !== null}
           />
         ) : (
           <Button
@@ -206,8 +209,14 @@ export default () => {
             className="submit mt-4"
             loading={isLoading}
             onClick={handleConnect}
+            disabled={eventId !== null}
           />
         )}
+        {eventId !== null &&
+        <div className="flex flex-start gap-2 mb-2">
+          <a href={`/confirmation/${eventId.toString(16)}`}>Go to the minting page</a>
+        </div>
+        }
       </Card>
     </div>
   );
