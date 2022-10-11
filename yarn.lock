@@ -402,10 +402,6 @@
     protobufjs "^6.11.3"
     utf8 "^3.0.0"
 
-"@hashgraph/smart-contracts@hashgraph/hedera-smart-contracts":
-  version "0.1.0"
-  resolved "https://codeload.github.com/hashgraph/hedera-smart-contracts/tar.gz/715892073cd9df32007d84cb3357f7c0ebcff54d"
-
 "@hethers/abstract-provider@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@hethers/abstract-provider/-/abstract-provider-1.2.0.tgz#3de4e338476e40863bd602481393b344ce2dfbc4"
