@@ -1,74 +1,76 @@
-import React, { useState } from 'react';
-import { Button } from 'primereact/button';
-import { Calendar } from 'primereact/calendar';
-import { InputNumber } from 'primereact/inputnumber';
-import { InputText } from 'primereact/inputtext';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { RadioButton } from 'primereact/radiobutton';
-import Card from '../componeont/Card';
-import Label from '../componeont/Label';
+import React, { useState } from 'react'
+import { Button } from 'primereact/button'
+import { Calendar } from 'primereact/calendar'
+import { InputNumber } from 'primereact/inputnumber'
+import { InputText } from 'primereact/inputtext'
+import { InputTextarea } from 'primereact/inputtextarea'
+import { RadioButton } from 'primereact/radiobutton'
+import Card from '../componeont/Card'
+import Label from '../componeont/Label'
 
-import SwitchableField from '../componeont/SwitchableField';
-import { useNavigate } from 'react-router-dom';
-import Star from '../assets/img-star.svg';
-import People from '../assets/img-people.svg';
-import Present from '../assets/img-present.svg';
-import { useHeaderAccess } from '../context/HederaProvider';
-import { useEffect } from 'react';
-import {ContractExecuteTransaction, ContractFunctionParameters} from "@hashgraph/sdk";
-import HashieConfig from "../settings.json";
-import BigNumber from "bignumber.js";
-import {hashMessage} from "@hashgraph/hethers/lib.esm/utils";
+import SwitchableField from '../componeont/SwitchableField'
+import Star from '../assets/img-star.svg'
+import People from '../assets/img-people.svg'
+import Present from '../assets/img-present.svg'
+import { useHeaderAccess } from '../context/HederaProvider'
 
-import './AddEvent.scss';
+import {
+  ContractExecuteTransaction,
+  ContractFunctionParameters
+} from '@hashgraph/sdk'
+import HashieConfig from '../settings.json'
+import BigNumber from 'bignumber.js'
+import { hashMessage } from '@hashgraph/hethers/lib.esm/utils'
+
+import './AddEvent.scss'
 
 const AddEvent = () => {
   const [eventName, setEventName] = useState<string>('')
-  const [selectedImage, setSelectedImage] = useState<number | undefined>();
-  const [paymentOption, setPaymentOption] = useState<string>('Free');
-  const [fromDate, setFromDate] = useState<Date>(new Date());
-  const [description, setDescription] = useState('');
-  const navigate = useNavigate();
-  const { isConnected, connect, signer } = useHeaderAccess();
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<number | undefined>()
+  const [paymentOption, setPaymentOption] = useState<string>('Free')
+  const [fromDate, setFromDate] = useState<Date>(new Date())
+  const [description, setDescription] = useState('')
+  const { isConnected, connect, signer } = useHeaderAccess()
+  const [isLoading, setIsLoading] = useState(false)
   const [eventId, setEventId] = useState<BigNumber | null>(null)
 
   const handleConnect = async () => {
-    setIsLoading(true);
-    connect();
+    setIsLoading(true)
+    connect()
     setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-  };
+      setIsLoading(false)
+    }, 2000)
+  }
 
-  const generateEventId = () => BigNumber(hashMessage(signer?.getAccountId() + eventName))
+  const generateEventId = () =>
+    BigNumber(hashMessage(signer?.getAccountId() + eventName))
 
   const handleSubmit = async () => {
-    if(!signer){
+    if (!signer) {
       throw new Error('No signer!')
     }
-    setIsLoading(true);
+    setIsLoading(true)
 
-    const _eventId = generateEventId();
+    const _eventId = generateEventId()
 
     // TODO Put the rest of the settings into JSON and store it to IPFS
     const tx = await new ContractExecuteTransaction()
-        .setContractId(HashieConfig.address)
-        .setFunction(
-          'createCollection',
-          new ContractFunctionParameters()
-              .addUint256(_eventId)
-              .addString(eventName)
-              .addString('https://hashie.net') // TODO Use the IPFS url here
-        )
-        .setGas(900000) // TODO Use a gas calculator
-        .freezeWithSigner(signer)
+      .setContractId(HashieConfig.address)
+      .setFunction(
+        'createCollection',
+        new ContractFunctionParameters()
+          .addUint256(_eventId)
+          .addString(eventName)
+          .addString('https://hashie.net') // TODO Use the IPFS url here
+      )
+      .setGas(900000) // TODO Use a gas calculator
+      .freezeWithSigner(signer)
 
     const result = await tx.executeWithSigner(signer)
-
+    console.log(result)
     setIsLoading(false)
     setEventId(_eventId)
-  };
+  }
 
   return (
     <div className="flex flex-column justify-content-center align-items-center h-full">
@@ -76,9 +78,9 @@ const AddEvent = () => {
       <Card className="flex flex-column add-event">
         <Label className="">Event Name</Label>
         <InputText
-            value={eventName}
-            onChange={e => setEventName(e.target.value)}
-            className="mb-4"
+          value={eventName}
+          onChange={(e) => setEventName(e.target.value)}
+          className="mb-4"
         />
         <Label className="">Event URL</Label>
         <InputText className="mb-4" />
@@ -210,14 +212,16 @@ const AddEvent = () => {
             disabled={eventId !== null}
           />
         )}
-        {eventId !== null &&
-        <div className="flex flex-start gap-2 mb-2">
-          <a href={`/confirmation/${eventId.toString(16)}`}>Go to the minting page</a>
-        </div>
-        }
+        {eventId !== null && (
+          <div className="flex flex-start gap-2 mb-2">
+            <a href={`/confirmation/${eventId.toString(16)}`}>
+              Go to the minting page
+            </a>
+          </div>
+        )}
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default AddEvent;
+export default AddEvent

@@ -1,11 +1,11 @@
-import React from 'react';
-import './App.scss';
-import AddEventPage from './pages/AddEvent.page';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import HomePage from './pages/Home.page';
-import NavBar from './componeont/NavBar';
-import ConfirmationPage from './pages/Confirmation.page';
-import { HederaProvider } from './context/HederaProvider';
+import React from 'react'
+import './App.scss'
+import AddEventPage from './pages/AddEvent.page'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import HomePage from './pages/Home.page'
+import NavBar from './componeont/NavBar'
+import ConfirmationPage from './pages/Confirmation.page'
+import { HederaProvider } from './context/HederaProvider'
 
 const router = createBrowserRouter([
   {
@@ -20,7 +20,7 @@ const router = createBrowserRouter([
     path: '/confirmation/:code',
     element: <ConfirmationPage />
   }
-]);
+])
 const App = () => {
   return (
     <div className="App bg">
@@ -29,7 +29,7 @@ const App = () => {
         <RouterProvider router={router} />
       </HederaProvider>
     </div>
-  );
-};
+  )
+}
 
-export default App;
+export default App

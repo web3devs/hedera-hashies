@@ -1,23 +1,23 @@
-import React from 'react';
-import { useHeaderAccess } from '../context/HederaProvider';
-import { formatAddress } from '../helpers';
-import './ConnectWalletButton.scss';
+import React from 'react'
+import { useHeaderAccess } from '../context/HederaProvider'
+import { formatAddress } from '../helpers'
+import './ConnectWalletButton.scss'
 
 const ConnectWalletButton = () => {
-  const { connect, isConnected, accountId, disconnect } = useHeaderAccess();
-  const handleConnect = () => connect();
+  const { connect, isConnected, accountId, disconnect } = useHeaderAccess()
+  const handleConnect = () => connect()
   const handleDisconnect = () => {
-    console.log('disconnect');
-    disconnect();
-  };
+    console.log('disconnect')
+    disconnect()
+  }
   return (
     <div
       className="connect-wallet-button"
       onClick={() => {
         if (!isConnected) {
-          handleConnect();
+          handleConnect()
         } else {
-          handleDisconnect();
+          handleDisconnect()
         }
       }}
     >
@@ -27,7 +27,7 @@ const ConnectWalletButton = () => {
 
       {isConnected && <span className="text-sm ml-2">Connected</span>}
     </div>
-  );
-};
+  )
+}
 
-export default ConnectWalletButton;
+export default ConnectWalletButton

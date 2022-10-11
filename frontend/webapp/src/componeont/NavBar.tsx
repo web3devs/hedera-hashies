@@ -1,6 +1,6 @@
-import React from 'react';
-import ConnectWalletButton from './ConnectWalletButton';
-import Logo from './Logo';
+import React from 'react'
+import ConnectWalletButton from './ConnectWalletButton'
+import Logo from './Logo'
 
 const NavBar = () => {
   return (
@@ -8,7 +8,7 @@ const NavBar = () => {
       <div
         className="flex align-items-center cursor-pointer"
         onClick={() => {
-          window.location.href = '/';
+          window.location.href = '/'
         }}
       >
         <Logo />
@@ -16,7 +16,7 @@ const NavBar = () => {
       </div>
       <ConnectWalletButton />
     </div>
-  );
-};
+  )
+}
 
-export default NavBar;
+export default NavBar

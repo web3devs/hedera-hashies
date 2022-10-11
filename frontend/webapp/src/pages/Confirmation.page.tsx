@@ -1,9 +1,9 @@
-import { Button } from 'primereact/button';
-import React from 'react';
+import { Button } from 'primereact/button'
+import React from 'react'
 
-import Card from '../componeont/Card';
-import Star from '../assets/img-star.svg';
-import './Confirmation.scss';
+import Card from '../componeont/Card'
+import Star from '../assets/img-star.svg'
+import './Confirmation.scss'
 
 const Confirmation = () => {
   return (
@@ -46,7 +46,7 @@ const Confirmation = () => {
         </div>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default Confirmation;
+export default Confirmation

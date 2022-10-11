@@ -1,14 +1,14 @@
-import React from 'react';
-import './Card.scss';
+import React from 'react'
+import './Card.scss'
 
 const Card = ({
   children,
   className
 }: {
-  children: React.ReactNode;
-  className?: string | undefined;
+  children: React.ReactNode
+  className?: string | undefined
 }) => {
-  return <div className={`${className} card`}>{children}</div>;
-};
+  return <div className={`${className} card`}>{children}</div>
+}
 
-export default Card;
+export default Card

@@ -1,10 +1,10 @@
-import { Button } from 'primereact/button';
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import InfoCard from '../componeont/home/InfoCard';
-import './Home.scss';
+import { Button } from 'primereact/button'
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import InfoCard from '../componeont/home/InfoCard'
+import './Home.scss'
 const Home = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   return (
     <div className="home">
       <div className="text-6xl text-white mb-4 font-normal">
@@ -23,7 +23,7 @@ const Home = () => {
       />
       <InfoCard />
     </div>
-  );
-};
+  )
+}
 
-export default Home;
+export default Home

@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'
 
-import './InfoCard.scss';
+import './InfoCard.scss'
 
 const InfoCard = () => {
   return (
@@ -14,7 +14,7 @@ const InfoCard = () => {
         <div className="mt-4 text-white text-6xl">6425</div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default InfoCard;
+export default InfoCard

@@ -1,6 +1,6 @@
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useState } from 'react'
 
-import { InputSwitch } from 'primereact/inputswitch';
+import { InputSwitch } from 'primereact/inputswitch'
 
 const SwitchableField = ({
   children,
@@ -8,12 +8,12 @@ const SwitchableField = ({
   subtitle,
   className = ''
 }: {
-  children: ReactElement | ReactElement[];
-  title: string;
-  subtitle: string;
-  className?: string;
+  children: ReactElement | ReactElement[]
+  title: string
+  subtitle: string
+  className?: string
 }) => {
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(false)
   return (
     <div className={`${className} flex flex-column  mb-2`}>
       <div className="flex">
@@ -27,13 +27,13 @@ const SwitchableField = ({
           className=""
           checked={checked}
           onChange={(e) => {
-            setChecked(e.target.value);
+            setChecked(e.target.value)
           }}
         />
       </div>
       <>{checked && children}</>
     </div>
-  );
-};
+  )
+}
 
-export default SwitchableField;
+export default SwitchableField
