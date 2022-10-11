@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Button } from 'primereact/button'
 import { Calendar } from 'primereact/calendar'
 import { InputNumber } from 'primereact/inputnumber'
@@ -7,13 +7,8 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { RadioButton } from 'primereact/radiobutton'
 import Card from '../componeont/Card'
 import Label from '../componeont/Label'
-
 import SwitchableField from '../componeont/SwitchableField'
-import Star from '../assets/img-star.svg'
-import People from '../assets/img-people.svg'
-import Present from '../assets/img-present.svg'
 import { useHeaderAccess } from '../context/HederaProvider'
-
 import {
   ContractExecuteTransaction,
   ContractFunctionParameters
@@ -27,13 +22,15 @@ import './AddEvent.scss'
 
 const AddEvent = () => {
   const [eventName, setEventName] = useState<string>('')
-  const [selectedImage, setSelectedImage] = useState<number>(0)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [paymentOption, setPaymentOption] = useState<string>('Free')
   const [fromDate, setFromDate] = useState<Date>(new Date())
   const [description, setDescription] = useState('')
   const { isConnected, connect, signer } = useHeaderAccess()
   const [isLoading, setIsLoading] = useState(false)
   const [eventId, setEventId] = useState<BigNumber | null>(null)
+
+  const fileUploadRef = useRef(null)
 
   const handleConnect = async () => {
     setIsLoading(true)
@@ -50,13 +47,13 @@ const AddEvent = () => {
     if (!signer) {
       throw new Error('No signer!')
     }
+    if (!selectedImage) {
+      throw new Error('No image!')
+    }
     try {
       setIsLoading(true)
 
-      const imgs = [Star, People, Present]
-      const image = window.location.origin + imgs[selectedImage]
-
-      const t = await storeNFT(image, 'Lorem', 'Ipsum')
+      const t = await storeNFT(selectedImage, 'Lorem', 'Ipsum')
       const metadataURL = `https://ipfs.io/ipfs/${t.ipnft}/metadata.json`
       console.log('metadataURL: ', metadataURL)
 
@@ -86,6 +83,11 @@ const AddEvent = () => {
     }
   }
 
+  const handleSelectImage = async (e: any) => {
+    console.log(e.target.files[0])
+    setSelectedImage(e.target.files[0])
+  }
+
   return (
     <div className="flex flex-column justify-content-center align-items-center h-full">
       <h1 className="text-2xl font-bold text-white">Create a new event</h1>
@@ -109,30 +111,7 @@ const AddEvent = () => {
 
         <Label className="">Select on Image</Label>
         <div className="flex flex-start gap-2 mb-2">
-          <img
-            src={Star}
-            onClick={() => setSelectedImage(0)}
-            alt="star"
-            className={`image${
-              selectedImage === 0 && ' selected'
-            } cursor-pointer`}
-          />
-          <img
-            src={People}
-            onClick={() => setSelectedImage(1)}
-            alt="people"
-            className={`image${
-              selectedImage === 1 && ' selected'
-            } cursor-pointer`}
-          />
-          <img
-            src={Present}
-            onClick={() => setSelectedImage(2)}
-            alt="present"
-            className={`image${
-              selectedImage === 2 && ' selected'
-            } cursor-pointer`}
-          />
+          <input type="file" ref={fileUploadRef} onChange={handleSelectImage} />
         </div>
         <SwitchableField
           title="Limited quantity"
