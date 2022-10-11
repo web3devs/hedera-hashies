@@ -1,9 +1,9 @@
-import { Button } from 'primereact';
+import { Button } from 'primereact/button';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import InfoCard from '../componeont/home/InfoCard';
 import './Home.scss';
-export default () => {
+const Home = () => {
   const navigate = useNavigate();
   return (
     <div className="home">
@@ -25,3 +25,5 @@ export default () => {
     </div>
   );
 };
+
+export default Home;

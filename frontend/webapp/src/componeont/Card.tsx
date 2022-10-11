@@ -1,7 +1,7 @@
-import React, { ReactElement } from 'react';
+import React from 'react';
 import './Card.scss';
 
-export default ({
+const Card = ({
   children,
   className
 }: {
@@ -10,3 +10,5 @@ export default ({
 }) => {
   return <div className={`${className} card`}>{children}</div>;
 };
+
+export default Card;

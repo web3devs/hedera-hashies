@@ -24,7 +24,7 @@ interface HederaAccessContextType {
   isConnected: boolean;
   connect: () => unknown;
   disconnect: () => Promise<unknown>;
-  signer: HashConnectSigner,
+  signer: HashConnectSigner | null,
 }
 
 const HeaderAccessContext = createContext<HederaAccessContextType>({
@@ -47,8 +47,8 @@ interface HederaProviderProps {
 
 let hashConnect = new HashConnect(false);
 
-// let topic: string | null = null;
-// let state: string | null = null;
+let topic: string | null = null;
+let state: string | null = null;
 // let pairingData: HashConnectTypes.SavedPairingData | null = null;
 // let network = null;
 
@@ -65,7 +65,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
     useState<HashConnectTypes.SavedPairingData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
-  const [signer, setSigner] = useState(null);
+  const [signer, setSigner] = useState<HashConnectSigner | null>(null);
   useEffect(() => {
     (async () => {
       let initData = await hashConnect.init(
@@ -80,14 +80,11 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       // topic = initData.topic;
       // const pairingString = initData.pairingString;
       setPairingData(initData.savedPairings[0]);
-      await hashConnect.connect();
-      const hcProvider = hashConnect.getProvider('testnet', topic, accountId);
-      const hcSigner = hashConnect.getSigner(hcProvider);
-      setSigner(hcSigner)
+      state = await hashConnect.connect();
     })();
   }, [meta]);
 
-  const disconnect = useCallback(async () => {
+  const disconnect = async () => {
     if (!pairingData?.topic) {
       throw new Error('no pairing data');
     }
@@ -106,8 +103,11 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       setIsConnected(true);
       const accountId = hashConnect.hcData.pairingData[0].accountIds[0];
       setAccountId(accountId);
-      const hcProvider = hashConnect.getProvider('testnet', topic, accountId);
+      const hcProvider = hashConnect.getProvider('testnet', topic || '', accountId);
       const hcSigner = hashConnect.getSigner(hcProvider);
+      if(!hcSigner){
+        throw new Error("No hcSigner")
+      }
       setSigner(hcSigner)
 
     } else {

@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import {
-  Button,
-  Calendar,
-  InputNumber,
-  InputText,
-  InputTextarea,
-  RadioButton
-} from 'primereact';
+import { Button } from 'primereact/button';
+import { Calendar } from 'primereact/calendar';
+import { InputNumber } from 'primereact/inputnumber';
+import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { RadioButton } from 'primereact/radiobutton';
 import Card from '../componeont/Card';
 import Label from '../componeont/Label';
 
-import './AddEvent.scss';
 import SwitchableField from '../componeont/SwitchableField';
 import { useNavigate } from 'react-router-dom';
 import Star from '../assets/img-star.svg';
@@ -23,7 +20,9 @@ import HashieConfig from "../settings.json";
 import BigNumber from "bignumber.js";
 import {hashMessage} from "@hashgraph/hethers/lib.esm/utils";
 
-export default () => {
+import './AddEvent.scss';
+
+const AddEvent = () => {
   const [eventName, setEventName] = useState<string>('')
   const [selectedImage, setSelectedImage] = useState<number | undefined>();
   const [paymentOption, setPaymentOption] = useState<string>('Free');
@@ -32,11 +31,7 @@ export default () => {
   const navigate = useNavigate();
   const { isConnected, connect, signer } = useHeaderAccess();
   const [isLoading, setIsLoading] = useState(false);
-  const [eventId, setEventId] = useState<BigNumber>(null)
-
-  useEffect(() => {
-    console.log(selectedImage);
-  }, [selectedImage]);
+  const [eventId, setEventId] = useState<BigNumber | null>(null)
 
   const handleConnect = async () => {
     setIsLoading(true);
@@ -46,9 +41,12 @@ export default () => {
     }, 2000);
   };
 
-  const generateEventId = () => BigNumber(hashMessage(signer.getAccountId() + eventName))
+  const generateEventId = () => BigNumber(hashMessage(signer?.getAccountId() + eventName))
 
   const handleSubmit = async () => {
+    if(!signer){
+      throw new Error('No signer!')
+    }
     setIsLoading(true);
 
     const _eventId = generateEventId();
@@ -141,7 +139,7 @@ export default () => {
                 value={fromDate}
                 onChange={(e) => setFromDate(e.value as Date)}
                 showTime
-              ></Calendar>
+              />
             </div>
             <div className="flex flex-column flex-grow-1 ml-1">
               <Label className="">EndDate Date</Label>
@@ -150,7 +148,7 @@ export default () => {
                 value={fromDate}
                 onChange={(e) => setFromDate(e.value as Date)}
                 showTime
-              ></Calendar>
+              />
             </div>
           </div>
         </SwitchableField>
@@ -221,3 +219,5 @@ export default () => {
     </div>
   );
 };
+
+export default AddEvent;

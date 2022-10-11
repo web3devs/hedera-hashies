@@ -1,0 +1,15 @@
+.add-event {
+  max-width: 768px;
+  & .image {
+    &.selected {
+      border: 2px solid #6166dc;
+      border-radius: 6px;
+    }
+  }
+}
+
+.radio-area {
+  background: #1a1b20;
+  border-radius: 7px;
+  padding: 16px;
+}
