@@ -21,12 +21,13 @@ import {
 import HashieConfig from '../settings.json'
 import BigNumber from 'bignumber.js'
 import { hashMessage } from '@hashgraph/hethers/lib.esm/utils'
+import { storeNFT } from '../helpers/ipfs'
 
 import './AddEvent.scss'
 
 const AddEvent = () => {
   const [eventName, setEventName] = useState<string>('')
-  const [selectedImage, setSelectedImage] = useState<number | undefined>()
+  const [selectedImage, setSelectedImage] = useState<number>(0)
   const [paymentOption, setPaymentOption] = useState<string>('Free')
   const [fromDate, setFromDate] = useState<Date>(new Date())
   const [description, setDescription] = useState('')
@@ -49,27 +50,40 @@ const AddEvent = () => {
     if (!signer) {
       throw new Error('No signer!')
     }
-    setIsLoading(true)
+    try {
+      setIsLoading(true)
 
-    const _eventId = generateEventId()
+      const imgs = [Star, People, Present]
+      const image = window.location.origin + imgs[selectedImage]
 
-    // TODO Put the rest of the settings into JSON and store it to IPFS
-    const tx = await new ContractExecuteTransaction()
-      .setContractId(HashieConfig.address)
-      .setFunction(
-        'createCollection',
-        new ContractFunctionParameters()
-          .addUint256(_eventId)
-          .addString(eventName)
-          .addString('https://hashie.net') // TODO Use the IPFS url here
-      )
-      .setGas(900000) // TODO Use a gas calculator
-      .freezeWithSigner(signer)
+      const t = await storeNFT(image, 'Lorem', 'Ipsum')
+      const metadataURL = `https://ipfs.io/ipfs/${t.ipnft}/metadata.json`
+      console.log('metadataURL: ', metadataURL)
 
-    const result = await tx.executeWithSigner(signer)
-    console.log(result)
-    setIsLoading(false)
-    setEventId(_eventId)
+      const _eventId = generateEventId()
+
+      // TODO Put the rest of the settings into JSON and store it to IPFS
+      const tx = await new ContractExecuteTransaction()
+        .setContractId(HashieConfig.address)
+        .setFunction(
+          'createCollection',
+          new ContractFunctionParameters()
+            .addUint256(_eventId)
+            .addString(eventName)
+            .addString(metadataURL)
+        )
+        .setGas(900000) // TODO Use a gas calculator
+        .freezeWithSigner(signer)
+
+      const result = await tx.executeWithSigner(signer)
+      console.log(result)
+      setIsLoading(false)
+      setEventId(_eventId)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
