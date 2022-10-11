@@ -105,7 +105,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       setAccountId(accountId)
       const hcProvider = hashConnect.getProvider(
         'testnet',
-        topic || '',
+        hashConnect.hcData.topic,
         accountId
       )
       const hcSigner = hashConnect.getSigner(hcProvider)
