@@ -34,25 +34,36 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
     event HTSCollectionCreated(address htsCollectionId, address caller);
     event HashiesNFTCreated(uint256 collectionId, address caller);
 
+    event DebugParameters(uint256, string);
+    event Debug(address, uint256);
+
     error HTSCollectionCreationFailed(int statusCode);
+    error HTSCollectionNotInitialized();
+    error ContractOwnerOnly(address contractOwner, address caller);
+    error HashieAlreadyExistsWithThatId(uint256 id);
+    error UnknownHashieId(uint256 id);
 
     modifier onlyOwner() {
-        require(owner == msg.sender, "owner only");
+        if (owner != msg.sender)
+            revert ContractOwnerOnly(owner, msg.sender);
         _;
     }
 
     modifier isHtsInitialized() {
-        require(htsCollectionId != address(0), "HST token not initialized");
+        if (htsCollectionId == address(0))
+            revert HTSCollectionNotInitialized();
         _;
     }
 
     modifier isUniqueEventId(uint256 id) {
-        require(collections[id].owner == address(0), "eventId must be unique");
+        if (collections[id].owner != address(0))
+            revert HashieAlreadyExistsWithThatId(id);
         _;
     }
 
     modifier isKnownEventId(uint256 id) {
-        require(collections[id].owner != address(0), "unknown eventId");
+        if (collections[id].owner == address(0))
+            revert UnknownHashieId(id);
         _;
     }
 
@@ -110,7 +121,9 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         uint256 id,
         string memory name,
         string memory metadataLink
-    ) external payable isHtsInitialized isUniqueEventId(id) {
+    )   external
+        isHtsInitialized isUniqueEventId(id)
+    {
         HashiesCollection memory collection;
         collection.owner = msg.sender;
         collection.name = name;
