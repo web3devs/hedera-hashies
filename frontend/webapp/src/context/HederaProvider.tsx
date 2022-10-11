@@ -6,8 +6,9 @@ import React, {
   useMemo,
   useState
 } from 'react'
-import { HashConnect, HashConnectTypes } from 'hashconnect'
 import { HashConnectSigner } from 'hashconnect/dist/esm/provider/signer'
+import { HashConnect, MessageTypes } from 'hashconnect'
+import { HashConnectTypes } from 'hashconnect/dist/types'
 
 export type NetworkStage = 'testnet' | 'mainnet' | 'previewnet'
 
@@ -49,6 +50,35 @@ interface HederaProviderProps {
 
 const hashConnect = new HashConnect(false)
 
+// TODO Begin debugging code
+hashConnect.foundExtensionEvent.on((data: any) => {
+  console.log('Found extension', data)
+})
+
+hashConnect.pairingEvent.on((data) => {
+  console.log('>>>>>Paired with wallet', data)
+})
+
+hashConnect.connectionStatusChangeEvent.on((state) => {
+  console.log('>>>>>status change event', state)
+})
+
+hashConnect.transactionEvent.on((data: MessageTypes.Transaction) => {
+  console.log('>>>>>transaction event', data)
+})
+
+hashConnect.signRequestEvent.on((data: MessageTypes.SigningRequest) => {
+  console.log('>>>>>sign request', data)
+})
+
+hashConnect.authRequestEvent.on((data: MessageTypes.AuthenticationRequest) => {
+  console.log('>>>>>auth request', data)
+})
+
+hashConnect.acknowledgeMessageEvent.on((data: MessageTypes.Acknowledge) => {
+  console.log('>>>>>ack message request', data)
+})
+// End debugging code
 const topic: string | null = null
 // let state: string | null = null
 // let pairingData: HashConnectTypes.SavedPairingData | null = null;
@@ -68,6 +98,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
   const [isConnected, setIsConnected] = useState(false)
   const [accountId, setAccountId] = useState<string | null>(null)
   const [signer, setSigner] = useState<HashConnectSigner | null>(null)
+
   useEffect(() => {
     ;(async () => {
       const initData = await hashConnect.init(

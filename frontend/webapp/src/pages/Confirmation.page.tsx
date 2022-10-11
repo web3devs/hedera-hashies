@@ -1,11 +1,54 @@
 import { Button } from 'primereact/button'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import Card from '../componeont/Card'
 import Star from '../assets/img-star.svg'
 import './Confirmation.scss'
+import { useHeaderAccess } from '../context/HederaProvider'
+import {
+  ContractCallQuery,
+  ContractExecuteTransaction,
+  ContractFunctionParameters,
+  Hbar
+} from '@hashgraph/sdk'
+import HashieConfig from '../settings.json'
+import { useParams } from 'react-router-dom'
+import BigNumber from 'bignumber.js'
 
 const Confirmation = () => {
+  const { isConnected, connect, signer } = useHeaderAccess()
+  const { code: collectionId } = useParams()
+
+  console.log(collectionId)
+
+  useEffect(() => {
+    if (!collectionId) return
+    if (!signer) return
+
+    const fetch = async () => {
+      const tx = new ContractCallQuery()
+        // const tx = await new ContractExecuteTransaction()
+        .setContractId(HashieConfig.address)
+        .setGas(100000)
+        .setQueryPayment(new Hbar(10))
+        .setFunction(
+          'simpleGet'
+          // new ContractFunctionParameters().addUint256(
+          //   new BigNumber('0x' + collectionId)
+          // )
+        )
+      // .freezeWithSigner(signer)
+
+      // const txBytes = tx.toBytes()
+      // const txResponse = hashconnect?.sendTransaction(hashconnect?.hcData.topic, tx.)
+      const txResponse = await tx.executeWithSigner(signer) // TODO why is txResonse null?
+      // const receipt = await txResponse.getReceipt(signer)
+
+      console.log('>>>>>', txResponse)
+    }
+    fetch()
+  }, [signer])
+
   return (
     <div className="flex justify-content-center align-items-center">
       <Card className="w-7 grid grid-nogutter">

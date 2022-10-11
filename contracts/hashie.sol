@@ -133,6 +133,19 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         collectionsCount += 1;
     }
 
+    function getCollection(uint256 _collectionId)
+        external view isKnownEventId(_collectionId)
+        returns (HashiesCollection memory _collection)
+    {
+        _collection = collections[_collectionId];
+    }
+
+    // TODO Begin debugging code
+    function simpleGet() external pure returns (string memory result) {
+        result = "foo";
+    }
+    // End debugging code
+
     function mint(
         uint256 collectionId,
         address receiver

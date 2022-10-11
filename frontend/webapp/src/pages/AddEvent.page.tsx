@@ -59,7 +59,6 @@ const AddEvent = () => {
 
       const _eventId = generateEventId()
 
-      // TODO Put the rest of the settings into JSON and store it to IPFS
       const tx = await new ContractExecuteTransaction()
         .setContractId(HashieConfig.address)
         .setFunction(
