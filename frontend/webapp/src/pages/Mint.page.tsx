@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react'
+import React, { useMemo, useState, useCallback } from 'react'
 import Card from '../components/Card'
 import { useParams } from 'react-router-dom'
 import { useHeaderAccess } from '../context/HederaProvider'
@@ -77,7 +77,6 @@ const Progress = () => {
 }
 
 const Mint = () => {
-  const [initiated, setInitiated] = useState<boolean>(false)
   const [state, setState] = useState<State>(State.INIT)
   const { code: collectionId } = useParams()
   const { signer } = useHeaderAccess()
@@ -88,7 +87,6 @@ const Mint = () => {
         console.error('no signer')
         return
       }
-      setInitiated(true)
       setState(State.PROGRESS)
 
       const accountId = signer?.getAccountId().toSolidityAddress()
@@ -113,13 +111,6 @@ const Mint = () => {
       setState(State.FAILURE)
     }
   }, [signer])
-
-  // useEffect(() => {
-  //   if (!collectionId || !signer) {
-  //     setState(State.FAILURE)
-  //     return
-  //   }
-  // }, [])
 
   const content = useMemo(() => {
     switch (state) {
