@@ -2,9 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { Button } from 'primereact/button'
 import Card from '../components/Card'
 import Star from '../assets/img-star.svg'
-import { ProgressSpinner } from 'primereact/progressspinner'
 import './Confirmation.scss'
 import { useParams } from 'react-router-dom'
+import { useHeaderAccess } from '../context/HederaProvider'
+import {
+  ContractExecuteTransaction,
+  ContractFunctionParameters
+} from '@hashgraph/sdk'
+import HashieConfig from '../settings.json'
 
 const Confirmation = () => {
   const { code: collectionId } = useParams()
@@ -12,6 +17,7 @@ const Confirmation = () => {
   const [name, setName] = useState<string | null>(null)
   const [image, setImage] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
+  const { signer } = useHeaderAccess()
 
   useEffect(() => {
     if (!collectionId) return
@@ -39,6 +45,31 @@ const Confirmation = () => {
     }
   }, [collectionId, name, description, image])
 
+  const handleMint = async () => {
+    if (!collectionId || !signer) {
+      return
+    }
+    const accountId = signer?.getAccountId().toSolidityAddress()
+    if (typeof accountId !== 'string') return
+
+    console.log('CollectionID: ', collectionId)
+    console.log('AccountID: ', signer?.getAccountId().toString(), accountId)
+
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(HashieConfig.address)
+      .setFunction(
+        'mint',
+        new ContractFunctionParameters()
+          .addString(collectionId)
+          .addAddress(accountId)
+      )
+      .setGas(9000000) // TODO Use a gas calculator
+      .freezeWithSigner(signer)
+
+    const result = await tx.executeWithSigner(signer)
+    console.log(result)
+  }
+
   return (
     <div className="flex justify-content-center align-items-center">
       <Card className="w-7 grid grid-nogutter">
@@ -47,10 +78,18 @@ const Confirmation = () => {
         ) : (
           <img src={Star} alt="Placeholder image" className="col-3" />
         )}
-        <div className="text-lg text-left text-white col-9 pl-4">
-          {name}
-          {loading && <ProgressSpinner />}
-        </div>
+        {!loading && (
+          <div className="text-lg text-left text-white col-9 pl-4">{name}</div>
+        )}
+        {loading && (
+          <div className="text-lg text-left text-white col-9 pl-4">
+            <i
+              className="pi pi-spin pi-spinner col-12"
+              style={{ fontSize: '5em', color: '#6166DC' }}
+            />
+            <div className="col-12 text-sm text-white mt-4">Loading...</div>
+          </div>
+        )}
         <div className="tex-sm text-left col-12 mt-4">Status</div>
         <div className="tex-sm text-left text-white col-12 mt-2">Status</div>
         <div className="tex-sm text-left col-12 mt-4">Event description</div>
@@ -66,11 +105,15 @@ const Confirmation = () => {
         {/* <div className="tex-sm text-left col-12 mt-4">Cost</div>
         <div className="tex-sm text-left text-white col-12 mt-2">Free</div> */}
         <div className="tex-sm text-left col-12 mt-4">Claim URL</div>
-        <div className="col-12 mb-4 flex align-items-center">
-          <a href={`${window.location.origin}/mint/${collectionId}`}>
-            {window.location.origin}/mint/{collectionId}
-          </a>
-          <Button icon="pi pi-copy" className="p-button-text" />
+        <div className="col-12 mb-4 flex flex-column align-items-center">
+          <Button
+            label="Mint Hashie!"
+            className="submit mt-4"
+            // onClick={() =>
+            //   (window.location.href = `${window.location.origin}/mint/${collectionId}`)
+            // }
+            onClick={handleMint}
+          />
         </div>
         <div className="col-12 text-xs">
           <p>Event id: {collectionId}</p>

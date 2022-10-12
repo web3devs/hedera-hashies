@@ -82,11 +82,6 @@ hashConnect.acknowledgeMessageEvent.on((data: MessageTypes.Acknowledge) => {
 })
 // End debugging code
 
-const topic: string | null = null
-// let state: string | null = null
-// let pairingData: HashConnectTypes.SavedPairingData | null = null;
-// let network = null;
-
 export const connect = () => {
   hashConnect.connectToLocalWallet()
 }
@@ -113,8 +108,6 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
         'testnet',
         true
       )
-      // topic = initData.topic;
-      // const pairingString = initData.pairingString;
       setPairingData(initData.savedPairings[0])
       await hashConnect.connect()
     })()
@@ -162,7 +155,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       signer,
       hashConnect
     }),
-    [accountId, isConnected, connect, disconnect, signer]
+    [accountId, isConnected, connect, disconnect, signer, hashConnect]
   )
   return (
     <HeaderAccessContext.Provider value={value}>
