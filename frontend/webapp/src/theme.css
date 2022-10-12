@@ -5610,7 +5610,7 @@
   transition: color 0.15s, box-shadow 0.15s;
 }
 .p-toast .p-toast-message .p-toast-icon-close:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.5);
 }
 .p-toast .p-toast-message .p-toast-icon-close:focus {
   outline: 0 none;
@@ -5618,14 +5618,13 @@
   box-shadow: 0 0 0 1px #e3f3fe;
 }
 .p-toast .p-toast-message.p-toast-message-info {
-  background: #cce5ff;
-  border: solid #b8daff;
-  border-width: 1px;
-  color: #004085;
+  background: #1a1b20;
+  color: rgba(255,255,255,0.5);
 }
 .p-toast .p-toast-message.p-toast-message-info .p-toast-message-icon,
 .p-toast .p-toast-message.p-toast-message-info .p-toast-icon-close {
-  color: #004085;
+  color: rgba(255,255,255,0.5);
+  size: 1rem;
 }
 .p-toast .p-toast-message.p-toast-message-success {
   background: #d4edda;
