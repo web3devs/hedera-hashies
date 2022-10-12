@@ -31,30 +31,8 @@ const Confirmation = () => {
     if (!hashConnect) return
 
     const _fetch = async () => {
-      // // This code is modelled after https://github.com/hashgraph/hedera-sdk-js/blob/main/examples/create-stateful-contract.js#L89
-      // const tx = new ContractCallQuery()
-      //   .setContractId(HashieConfig.address)
-      //   .setGas(100000)
-      //   .setQueryPayment(new Hbar(10))
-      //   .setFunction(
-      //     'simpleGet'
-      //     // 'getCollection',
-      //     // new ContractFunctionParameters().addUint256(
-      //     //   new BigNumber('0x' + collectionId)
-      //     // )
-      //   )
-      // const txResponse = await tx.executeWithSigner(signer)
-      // // const receipt = await txResponse.getReceipt(signer)
-      // console.log(tx.contractId)
-      // console.log(tx.senderAccountId)
-      // console.log(tx.functionParameters)
-      // console.log(tx.gas)
-      // // console.log(tx.)
-      //
-      // console.log('>>>>>', JSON.stringify(txResponse))
-
       const response = await fetch(
-        `https://${collectionId}.ipfs.nftstorage.link/metadata.json`
+        `https://ipfs.io/ipfs/${collectionId}/metadata.json`
       )
       const { description, image, name } = await response.json()
       console.log(description, image, name)
@@ -62,7 +40,7 @@ const Confirmation = () => {
         const [imageCid, imageFileName] = image
           .replace(/^ipfs:\/\//, '')
           .split('/')
-        setImage(`https://${imageCid}.ipfs.nftstorage.link/${imageFileName}`)
+        setImage(`https://ipfs.io/ipfs/${imageCid}/${imageFileName}`)
       } else {
         setImage(image)
       }
