@@ -25,6 +25,7 @@ interface HederaAccessContextType {
   connect: () => unknown
   disconnect: () => Promise<unknown>
   signer: HashConnectSigner | null
+  hashConnect: HashConnect | null
 }
 
 const HeaderAccessContext = createContext<HederaAccessContextType>({
@@ -37,7 +38,8 @@ const HeaderAccessContext = createContext<HederaAccessContextType>({
     new Promise<void>(() => {
       // NOOP
     }),
-  signer: null
+  signer: null,
+  hashConnect: null
 })
 
 export const useHeaderAccess = () => useContext(HeaderAccessContext)
@@ -157,7 +159,8 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       isConnected,
       connect,
       disconnect,
-      signer
+      signer,
+      hashConnect
     }),
     [accountId, isConnected, connect, disconnect, signer]
   )

@@ -5,6 +5,7 @@ import Card from '../componeont/Card'
 import Star from '../assets/img-star.svg'
 import './Confirmation.scss'
 import { useHeaderAccess } from '../context/HederaProvider'
+import { MessageTypes } from 'hashconnect'
 import {
   Client,
   ContractCallQuery,
@@ -18,12 +19,13 @@ import BigNumber from 'bignumber.js'
 import { hethers } from '@hashgraph/hethers'
 
 const Confirmation = () => {
-  const { isConnected, connect, signer } = useHeaderAccess()
+  const { isConnected, connect, signer, hashConnect } = useHeaderAccess()
   const { code: collectionId } = useParams()
 
   useEffect(() => {
     if (!collectionId) return
     if (!signer) return
+    if (!hashConnect) return
 
     const fetch = async () => {
       // This code is modelled after https://github.com/hashgraph/hedera-sdk-js/blob/main/examples/create-stateful-contract.js#L89
@@ -38,15 +40,28 @@ const Confirmation = () => {
           //   new BigNumber('0x' + collectionId)
           // )
         )
-      const txResponse = await tx.executeWithSigner(signer)
-      // const receipt = await txResponse.getReceipt(signer)
-      console.log(tx.contractId)
-      console.log(tx.senderAccountId)
-      console.log(tx.functionParameters)
-      console.log(tx.gas)
-      // console.log(tx.)
+        .setMaxQueryPayment(new Hbar(0.00000001))
 
-      console.log('>>>>>', JSON.stringify(txResponse))
+      console.log('hc: ', hashConnect)
+
+      const bts: Uint8Array = await tx.toBytes()
+
+      const topic = hashConnect?.hcData.topic ? hashConnect?.hcData.topic : ''
+      const transaction: MessageTypes.Transaction = {
+        topic: topic,
+        byteArray: bts,
+        metadata: {
+          accountToSign: hashConnect?.hcData.pairingData[0].accountIds[0]
+            ? hashConnect?.hcData.pairingData[0].accountIds[0]
+            : '',
+          returnTransaction: false,
+          hideNft: false
+        }
+      }
+
+      const r = await hashConnect.sendTransaction(topic, transaction)
+
+      console.log('txResponse: ', r.receipt)
     }
     fetch()
   }, [signer, collectionId])
