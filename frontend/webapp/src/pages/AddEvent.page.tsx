@@ -14,8 +14,6 @@ import {
   ContractFunctionParameters
 } from '@hashgraph/sdk'
 import HashieConfig from '../settings.json'
-import BigNumber from 'bignumber.js'
-import { hashMessage } from '@hashgraph/hethers/lib.esm/utils'
 import { storeNFT } from '../helpers/ipfs'
 
 import './AddEvent.scss'
@@ -39,9 +37,6 @@ const AddEvent = () => {
       setIsLoading(false)
     }, 2000)
   }
-
-  const generateEventId = () =>
-    BigNumber(hashMessage(signer?.getAccountId() + eventName))
 
   const handleSubmit = async () => {
     if (!signer) {
@@ -76,6 +71,8 @@ const AddEvent = () => {
       console.log(result)
       setIsLoading(false)
       setEventId(_eventId)
+
+      window.location.href = `${window.location.origin}/confirmation/${_eventId}`
     } catch (e) {
       console.error(e)
     } finally {
@@ -204,11 +201,6 @@ const AddEvent = () => {
             onClick={handleConnect}
             disabled={eventId !== null}
           />
-        )}
-        {eventId !== null && (
-          <div className="flex flex-start gap-2 mb-2">
-            <a href={`/confirmation/${eventId}`}>Go to the minting page</a>
-          </div>
         )}
       </Card>
     </div>
