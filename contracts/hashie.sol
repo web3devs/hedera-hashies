@@ -27,12 +27,12 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
     address htsCollectionId; // The main non-fungible token where all hashies will live
 
     mapping(int64 => uint256) nftSerialMap; // Maps from a token serial number to a the serial number within the collection
-    mapping(uint256 => HashiesCollection) collections;
+    mapping(string => HashiesCollection) collections;
     uint256 collectionsCount = 0;
 
     event HTSCollectionAssociated(address htsCollectionId, address caller);
     event HTSCollectionCreated(address htsCollectionId, address caller);
-    event HashiesNFTCreated(uint256 collectionId, address caller);
+    event HashiesNFTCreated(string collectionId, address caller);
 
     event DebugParameters(uint256, string);
     event Debug(address, uint256);
@@ -40,8 +40,8 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
     error HTSCollectionCreationFailed(int statusCode);
     error HTSCollectionNotInitialized();
     error ContractOwnerOnly(address contractOwner, address caller);
-    error HashieAlreadyExistsWithThatId(uint256 id);
-    error UnknownHashieId(uint256 id);
+    error HashieAlreadyExistsWithThatId(string id);
+    error UnknownHashieId(string id);
 
     modifier onlyOwner() {
         if (owner != msg.sender)
@@ -55,13 +55,13 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         _;
     }
 
-    modifier isUniqueEventId(uint256 id) {
+    modifier isUniqueEventId(string memory id) {
         if (collections[id].owner != address(0))
             revert HashieAlreadyExistsWithThatId(id);
         _;
     }
 
-    modifier isKnownEventId(uint256 id) {
+    modifier isKnownEventId(string memory id) {
         if (collections[id].owner == address(0))
             revert UnknownHashieId(id);
         _;
@@ -118,7 +118,7 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
     }
 
     function createCollection(
-        uint256 id,
+        string memory id,
         string memory name,
         string memory metadataLink
     )   external
@@ -133,7 +133,7 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         collectionsCount += 1;
     }
 
-    function getCollection(uint256 _collectionId)
+    function getCollection(string memory _collectionId)
         external view isKnownEventId(_collectionId)
         returns (HashiesCollection memory _collection)
     {
@@ -147,14 +147,14 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
     // End debugging code
 
     function mint(
-        uint256 collectionId,
+        string memory collectionId,
         address receiver
     ) external isHtsInitialized isKnownEventId(collectionId) returns (uint256 hashiesSerial, int64 nftSerial) {
         (hashiesSerial, nftSerial) = _mint(collectionId);
         _transfer(receiver, nftSerial);
     }
 
-    function _mint(uint256 collectionId) private returns (uint256 hashiesSerial, int64 nftSerial) {
+    function _mint(string memory collectionId) private returns (uint256 hashiesSerial, int64 nftSerial) {
         HashiesCollection storage hashiesCollection = collections[collectionId];
         hashiesSerial = hashiesCollection.nextSerial;
         bytes[] memory metadataLink;
