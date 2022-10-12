@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import HomePage from './pages/Home.page'
 import NavBar from './components/NavBar'
 import ConfirmationPage from './pages/Confirmation.page'
+import MintPage from './pages/Mint.page'
 import { HederaProvider } from './context/HederaProvider'
 
 const router = createBrowserRouter([
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: '/confirmation/:code',
     element: <ConfirmationPage />
+  },
+  {
+    path: '/mint/:code',
+    element: <MintPage />
   }
 ])
 const App = () => {

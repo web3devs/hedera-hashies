@@ -1,0 +1,21 @@
+.check-wrapper {
+  border: solid 1px #6166dc;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.error-wrapper {
+  border: solid 1px #ff0000;
+  color: red;
+  border-radius: 50%;
+  font-size: 36px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
