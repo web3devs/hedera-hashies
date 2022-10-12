@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import Card from '../components/Card'
 import { useParams } from 'react-router-dom'
 import { useHeaderAccess } from '../context/HederaProvider'
@@ -9,11 +9,26 @@ import {
 import HashieConfig from '../settings.json'
 
 import './Mint.scss'
+import { Button } from 'primereact'
 
 enum State {
+  INIT = 1,
   PROGRESS = 2,
   SUCCESS = 3,
   FAILURE = 4
+}
+
+const Init = ({ handleSubmit }: { handleSubmit: () => unknown }) => {
+  return (
+    <div className="flex flex-column align-items-center col-12">
+      <div className="text-white text-lg">Click here to claim your token</div>
+      <Button
+        label="Mint Hashie!"
+        className="submit mt-4"
+        onClick={handleSubmit}
+      />
+    </div>
+  )
 }
 
 const Error = () => {
@@ -63,17 +78,16 @@ const Progress = () => {
 
 const Mint = () => {
   const [initiated, setInitiated] = useState<boolean>(false)
-  const [state, setState] = useState<State>(State.FAILURE)
+  const [state, setState] = useState<State>(State.INIT)
   const { code: collectionId } = useParams()
   const { signer } = useHeaderAccess()
 
-  useEffect(() => {
-    if (!collectionId || !signer) {
-      setState(State.FAILURE)
-      return
-    }
-
-    const _fetch = async () => {
+  const handleMint = useCallback(async () => {
+    try {
+      if (!signer) {
+        console.error('no signer')
+        return
+      }
       setInitiated(true)
       setState(State.PROGRESS)
 
@@ -95,14 +109,23 @@ const Mint = () => {
       console.log(result)
 
       setState(State.SUCCESS)
+    } catch {
+      setState(State.FAILURE)
     }
-    if (!initiated) {
-      _fetch()
-    }
-  }, [initiated])
+  }, [signer])
+
+  // useEffect(() => {
+  //   if (!collectionId || !signer) {
+  //     setState(State.FAILURE)
+  //     return
+  //   }
+  // }, [])
 
   const content = useMemo(() => {
     switch (state) {
+      case State.INIT: {
+        return <Init handleSubmit={handleMint} />
+      }
       case State.PROGRESS: {
         return <Progress />
       }
