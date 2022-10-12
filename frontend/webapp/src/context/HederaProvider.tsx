@@ -64,7 +64,7 @@ hashConnect.connectionStatusChangeEvent.on((state) => {
 })
 
 hashConnect.transactionEvent.on((data: MessageTypes.Transaction) => {
-  console.log('>>>>>transaction event', data)
+  console.log('********transaction event', data)
 })
 
 hashConnect.signRequestEvent.on((data: MessageTypes.SigningRequest) => {
@@ -79,6 +79,7 @@ hashConnect.acknowledgeMessageEvent.on((data: MessageTypes.Acknowledge) => {
   console.log('>>>>>ack message request', data)
 })
 // End debugging code
+
 const topic: string | null = null
 // let state: string | null = null
 // let pairingData: HashConnectTypes.SavedPairingData | null = null;

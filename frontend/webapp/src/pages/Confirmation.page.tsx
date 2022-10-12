@@ -6,6 +6,7 @@ import Star from '../assets/img-star.svg'
 import './Confirmation.scss'
 import { useHeaderAccess } from '../context/HederaProvider'
 import {
+  Client,
   ContractCallQuery,
   ContractExecuteTransaction,
   ContractFunctionParameters,
@@ -14,40 +15,41 @@ import {
 import HashieConfig from '../settings.json'
 import { useParams } from 'react-router-dom'
 import BigNumber from 'bignumber.js'
+import { hethers } from '@hashgraph/hethers'
 
 const Confirmation = () => {
   const { isConnected, connect, signer } = useHeaderAccess()
   const { code: collectionId } = useParams()
-
-  console.log(collectionId)
 
   useEffect(() => {
     if (!collectionId) return
     if (!signer) return
 
     const fetch = async () => {
+      // This code is modelled after https://github.com/hashgraph/hedera-sdk-js/blob/main/examples/create-stateful-contract.js#L89
       const tx = new ContractCallQuery()
-        // const tx = await new ContractExecuteTransaction()
         .setContractId(HashieConfig.address)
         .setGas(100000)
         .setQueryPayment(new Hbar(10))
         .setFunction(
           'simpleGet'
+          // 'getCollection',
           // new ContractFunctionParameters().addUint256(
           //   new BigNumber('0x' + collectionId)
           // )
         )
-      // .freezeWithSigner(signer)
-
-      // const txBytes = tx.toBytes()
-      // const txResponse = hashconnect?.sendTransaction(hashconnect?.hcData.topic, tx.)
-      const txResponse = await tx.executeWithSigner(signer) // TODO why is txResonse null?
+      const txResponse = await tx.executeWithSigner(signer)
       // const receipt = await txResponse.getReceipt(signer)
+      console.log(tx.contractId)
+      console.log(tx.senderAccountId)
+      console.log(tx.functionParameters)
+      console.log(tx.gas)
+      // console.log(tx.)
 
-      console.log('>>>>>', txResponse)
+      console.log('>>>>>', JSON.stringify(txResponse))
     }
     fetch()
-  }, [signer])
+  }, [signer, collectionId])
 
   return (
     <div className="flex justify-content-center align-items-center">
