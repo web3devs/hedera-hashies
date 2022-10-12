@@ -1,13 +1,13 @@
-import { Button } from 'primereact/button';
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import { Button } from 'primereact/button'
+import React from 'react'
+import { useParams } from 'react-router-dom'
 
-import Card from '../componeont/Card';
-import Star from '../assets/img-star.svg';
-import './Confirmation.scss';
+import Card from '../componeont/Card'
+import Star from '../assets/img-star.svg'
+import './Confirmation.scss'
 
 export default () => {
-  const params = useParams();
+  const params = useParams()
   return (
     <div className="flex justify-content-center align-items-center">
       <Card className="w-7 grid grid-nogutter">
@@ -37,8 +37,8 @@ export default () => {
         <div className="tex-sm text-left text-white col-12 mt-2">Free</div>
         <div className="tex-sm text-left col-12 mt-4">Claim URL</div>
         <div className="col-12 mb-4 flex align-items-center">
-          <a href="https://hashies.net/mint/123456">
-            https://hashies.net/mint/123456
+          <a href="https://hashie.net/mint/123456">
+            https://hashie.net/mint/123456
           </a>
           <Button icon="pi pi-copy" className="p-button-text" />
         </div>
@@ -48,5 +48,5 @@ export default () => {
         </div>
       </Card>
     </div>
-  );
-};
+  )
+}

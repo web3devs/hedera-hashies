@@ -1,6 +1,6 @@
-import React from 'react';
-import ConnectWalletButton from './ConnectWalletButton';
-import Logo from './Logo';
+import React from 'react'
+import ConnectWalletButton from './ConnectWalletButton'
+import Logo from './Logo'
 
 export default () => {
   return (
@@ -8,13 +8,13 @@ export default () => {
       <div
         className="flex align-items-center cursor-pointer"
         onClick={() => {
-          window.location.href = '/';
+          window.location.href = '/'
         }}
       >
         <Logo />
-        <span className="text-white font-bold ml-2">hashies</span>
+        <span className="text-white font-bold ml-2">hashie.net</span>
       </div>
       <ConnectWalletButton />
     </div>
-  );
-};
+  )
+}

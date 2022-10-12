@@ -11,7 +11,7 @@ const Home = () => {
         Proof of attendance
       </div>
       <div className="text-6xl text-primary font-normal mt-4 mb-4">
-        #hashies
+        #hashie.net
       </div>
       <div className="text mb-4">
         Create events for your communities and prove that they were there.
