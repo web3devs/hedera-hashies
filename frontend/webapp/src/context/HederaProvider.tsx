@@ -53,7 +53,7 @@ interface HederaProviderProps {
 const hashConnect = new HashConnect(false)
 
 // TODO Begin debugging code
-hashConnect.foundExtensionEvent.on((data: any) => {
+hashConnect.foundExtensionEvent.on((data) => {
   console.log('Found extension', data)
 })
 

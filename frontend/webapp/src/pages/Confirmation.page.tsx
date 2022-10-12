@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from 'primereact/button'
 import Card from '../components/Card'
 import Star from '../assets/img-star.svg'
 import './Confirmation.scss'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useHeaderAccess } from '../context/HederaProvider'
 import {
   ContractExecuteTransaction,
@@ -11,10 +11,7 @@ import {
 } from '@hashgraph/sdk'
 import HashieConfig from '../settings.json'
 
-import { Toast } from 'primereact/toast'
-
 const Confirmation = () => {
-  const toast = useRef<any>()
   const { code: collectionId } = useParams()
   const [loading, isLoading] = useState<boolean>(true)
   const [name, setName] = useState<string | null>(null)
@@ -79,10 +76,6 @@ const Confirmation = () => {
     console.log(result)
   }
 
-  const url = useMemo(() => {
-    return `https://hashie.net/mint/${collectionId}`
-  }, [collectionId])
-
   return (
     <div className="flex justify-content-center align-items-center">
       <Card className="w-7 grid grid-nogutter">
@@ -103,21 +96,6 @@ const Confirmation = () => {
             </div>
             <div className="text-sm text-left text-white col-12 mt-2">
               {description}
-            </div>
-            <div className="text-sm text-left col-12 mt-4 ">Claim URL</div>
-            <div className="flex justify-items-center align-items-center">
-              <Link to={'/mint/' + collectionId}>URL</Link>
-              <Button
-                icon="pi pi-copy"
-                className="p-button-text"
-                onClick={() => {
-                  navigator.clipboard.writeText(url)
-                  toast?.current?.show({
-                    severity: 'info',
-                    summary: 'URL copied to clipboard'
-                  })
-                }}
-              />
             </div>
             <div className="col-12 mb-4 flex flex-column align-items-center">
               <Button
@@ -143,7 +121,6 @@ const Confirmation = () => {
           </>
         )}
       </Card>
-      <Toast ref={toast} position="top-center" />
     </div>
   )
 }

@@ -80,9 +80,11 @@ const AddEvent = () => {
     }
   }
 
-  const handleSelectImage = async (e: any) => {
-    console.log(e.target.files[0])
-    setSelectedImage(e.target.files[0])
+  const handleSelectImage = async (files: FileList | null) => {
+    if (files) {
+      console.log(files[0])
+      setSelectedImage(files[0])
+    }
   }
 
   return (
@@ -108,7 +110,11 @@ const AddEvent = () => {
 
         <Label className="">Select on Image</Label>
         <div className="flex flex-start gap-2 mb-2">
-          <input type="file" ref={fileUploadRef} onChange={handleSelectImage} />
+          <input
+            type="file"
+            ref={fileUploadRef}
+            onChange={(e) => handleSelectImage(e.target.files)}
+          />
         </div>
         <SwitchableField
           title="Limited quantity"
