@@ -31,6 +31,6 @@ jobs:
       - name: Copy files to S3
         run: |
           aws s3 sync build/ s3://hashie.net/ --delete --acl public-read
-      # - name: Invalidate CloudFront distribution
-      #   run: |
-      #     aws cloudfront create-invalidation --distribution-id 123 --paths "/*"
+      - name: Invalidate CloudFront distribution
+        run: |
+          aws cloudfront create-invalidation --distribution-id E1SZRLLPJFQ21Z --paths "/*"
