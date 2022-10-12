@@ -28,7 +28,7 @@ const AddEvent = () => {
   const [description, setDescription] = useState('')
   const { isConnected, connect, signer } = useHeaderAccess()
   const [isLoading, setIsLoading] = useState(false)
-  const [eventId, setEventId] = useState<BigNumber | null>(null)
+  const [eventId, setEventId] = useState<string | null>(null)
 
   const fileUploadRef = useRef(null)
 
@@ -57,14 +57,15 @@ const AddEvent = () => {
       const metadataURL = `https://ipfs.io/ipfs/${t.ipnft}/metadata.json`
       console.log('metadataURL: ', metadataURL)
 
-      const _eventId = generateEventId()
+      const _eventId = t.ipnft
+      console.log(_eventId)
 
       const tx = await new ContractExecuteTransaction()
         .setContractId(HashieConfig.address)
         .setFunction(
           'createCollection',
           new ContractFunctionParameters()
-            .addUint256(_eventId)
+            .addString(_eventId)
             .addString(eventName)
             .addString(metadataURL)
         )
@@ -206,9 +207,7 @@ const AddEvent = () => {
         )}
         {eventId !== null && (
           <div className="flex flex-start gap-2 mb-2">
-            <a href={`/confirmation/${eventId.toString(16)}`}>
-              Go to the minting page
-            </a>
+            <a href={`/confirmation/${eventId}`}>Go to the minting page</a>
           </div>
         )}
       </Card>
