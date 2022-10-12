@@ -7,7 +7,8 @@ import { useParams } from 'react-router-dom'
 import { useHeaderAccess } from '../context/HederaProvider'
 import {
   ContractExecuteTransaction,
-  ContractFunctionParameters
+  ContractFunctionParameters,
+  Hbar
 } from '@hashgraph/sdk'
 import HashieConfig from '../settings.json'
 
@@ -30,9 +31,7 @@ const Confirmation = () => {
       console.log(window.location.origin)
       const { description, image, name } = data
       if (image.startsWith('ipfs://')) {
-        const [imageCid, imageFileName] = image
-          .replace(/^ipfs:\/\//, '')
-          .split('/')
+        const [, , imageCid, imageFileName] = image.split('/')
         setImage(`https://ipfs.io/ipfs/${imageCid}/${imageFileName}`)
       } else {
         setImage(image)
@@ -61,19 +60,27 @@ const Confirmation = () => {
     console.log('CollectionID: ', collectionId)
     console.log('AccountID: ', signer?.getAccountId().toString(), accountId)
 
-    const tx = await new ContractExecuteTransaction()
-      .setContractId(HashieConfig.address)
-      .setFunction(
-        'mint',
-        new ContractFunctionParameters()
-          .addString(collectionId)
-          .addAddress(accountId)
-      )
-      .setGas(9000000) // TODO Use a gas calculator
-      .freezeWithSigner(signer)
+    try {
+      const tx = await new ContractExecuteTransaction()
+        .setContractId(HashieConfig.address)
+        .setFunction(
+          'mint',
+          new ContractFunctionParameters()
+            .addString(collectionId)
+            .addAddress(accountId)
+        )
+        .setGas(9000000) // TODO Use a gas calculator
+        .freezeWithSigner(signer)
 
-    const result = await tx.executeWithSigner(signer)
-    console.log(result)
+      const result = await tx.executeWithSigner(signer)
+      console.log(result)
+      if (result) {
+        const record = result.getRecordWithSigner(signer)
+        console.log(record)
+      }
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (

@@ -101,7 +101,7 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
     ;(async () => {
       const initData = await hashConnect.init(
         {
-          name: 'hashie',
+          name: 'Hashie',
           description: 'Proof of attendance app',
           icon: 'https://hashie.net/logo.svg'
         },

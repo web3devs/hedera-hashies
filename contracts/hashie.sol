@@ -33,12 +33,17 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
     event HTSCollectionAssociated(address htsCollectionId, address caller);
     event HTSCollectionCreated(address htsCollectionId, address caller);
     event HashiesNFTCreated(string collectionId, address caller);
+    event HTSMintingSucceeded(string collectionId, int64 tokenId);
+    event HTSTransferSucceeded(address destination, int64 tokenId);
 
     event DebugParameters(uint256, string);
     event Debug(address, uint256);
 
     error HTSCollectionCreationFailed(int statusCode);
     error HTSCollectionNotInitialized();
+    error HTSMintingFailed(string collectionId, uint256 hashieSerialNumber, int statusCode);
+    error HTSTransferFailed(address destination, int64 tokenId, int statusCode);
+    error HTSAssociateCollectionFailed(address destination, int statusCode);
     error ContractOwnerOnly(address contractOwner, address caller);
     error HashieAlreadyExistsWithThatId(string id);
     error UnknownHashieId(string id);
@@ -82,7 +87,7 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         keyType = keyType.setBit(uint8(KeyType.PAUSE));
 //        keyType = keyType.setBit(uint8(KeyType.FEE)); // TODO Does it make sense to charge a small fee?
         keyType = keyType.setBit(uint8(KeyType.FREEZE));
-        keyType = keyType.setBit(uint8(KeyType.KYC));
+//        keyType = keyType.setBit(uint8(KeyType.KYC)); // TODO Do we need KYC?
 
         keys[0] = IHederaTokenService.TokenKey(
             keyType,
@@ -140,16 +145,10 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         _collection = collections[_collectionId];
     }
 
-    // TODO Begin debugging code
-    function simpleGet() external pure returns (string memory result) {
-        result = "foo";
-    }
-    // End debugging code
-
     function mint(
         string memory collectionId,
         address receiver
-    ) external isHtsInitialized isKnownEventId(collectionId) returns (uint256 hashiesSerial, int64 nftSerial) {
+    ) external payable isHtsInitialized isKnownEventId(collectionId) returns (uint256 hashiesSerial, int64 nftSerial) {
         (hashiesSerial, nftSerial) = _mint(collectionId);
         _transfer(receiver, nftSerial);
     }
@@ -157,23 +156,32 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
     function _mint(string memory collectionId) private returns (uint256 hashiesSerial, int64 nftSerial) {
         HashiesCollection storage hashiesCollection = collections[collectionId];
         hashiesSerial = hashiesCollection.nextSerial;
-        bytes[] memory metadataLink;
-        metadataLink[0] = hashiesCollection.metadataLink;
+        bytes[] memory metadata = new bytes[](1);
+        metadata[0] = hashiesCollection.metadataLink;
 
-        (int response, , int64[] memory nftSerials) = mintToken(htsCollectionId, 0, metadataLink);
-        require(response != HederaResponseCodes.SUCCESS, "Failed to mint non-fungible token");
+        (int response, , int64[] memory nftSerials) = mintToken(htsCollectionId, 0, metadata);
+        if (response != HederaResponseCodes.SUCCESS) {
+            revert HTSMintingFailed(collectionId, hashiesSerial, response);
+        }
         nftSerial = nftSerials[0];
         nftSerialMap[nftSerial] = hashiesSerial;
-        hashiesCollection.nftSerialMap.push(nftSerial);
+//        hashiesCollection.nftSerialMap.push(nftSerial); // TODO
         hashiesCollection.nextSerial += 1;
+        emit HTSMintingSucceeded(collectionId, nftSerial);
     }
 
     function _transfer(
         address receiver,
         int64 serial
-    ) private returns (int response) {
-        associateToken(receiver, htsCollectionId);
-        response = transferNFT(htsCollectionId, address(this), receiver, serial);
-        require(response != HederaResponseCodes.SUCCESS, "Transfer failed");
+    ) private {
+        int associateResponse = associateToken(receiver, htsCollectionId);
+        if (associateResponse != HederaResponseCodes.SUCCESS) {
+            revert HTSAssociateCollectionFailed(receiver, associateResponse);
+        }
+        int response = transferNFT(htsCollectionId, address(this), receiver, serial);
+        if (response != HederaResponseCodes.SUCCESS) {
+            revert HTSTransferFailed(receiver, serial, response);
+        }
+        emit HTSTransferSucceeded(receiver, serial);
     }
 }

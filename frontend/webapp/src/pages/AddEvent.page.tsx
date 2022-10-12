@@ -48,7 +48,7 @@ const AddEvent = () => {
     try {
       setIsLoading(true)
 
-      const t = await storeNFT(selectedImage, eventName, description)
+      const t = await storeNFT(selectedImage, eventName, description) // FIXME The smart contract call fails when description has quotes around it
       const metadataURL = `https://ipfs.io/ipfs/${t.ipnft}/metadata.json`
       console.log('metadataURL: ', metadataURL)
 
@@ -68,7 +68,6 @@ const AddEvent = () => {
         .freezeWithSigner(signer)
 
       const result = await tx.executeWithSigner(signer)
-      console.log(result)
       setIsLoading(false)
       setEventId(_eventId)
 
