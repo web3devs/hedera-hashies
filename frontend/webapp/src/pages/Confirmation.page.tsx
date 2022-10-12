@@ -1,7 +1,7 @@
 import { Button } from 'primereact/button'
 import React, { useEffect } from 'react'
 
-import Card from '../componeont/Card'
+import Card from '../components/Card'
 import Star from '../assets/img-star.svg'
 import './Confirmation.scss'
 import { useHeaderAccess } from '../context/HederaProvider'

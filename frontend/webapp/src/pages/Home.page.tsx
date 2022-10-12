@@ -1,7 +1,7 @@
 import { Button } from 'primereact/button'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import InfoCard from '../componeont/home/InfoCard'
+import InfoCard from '../components/home/InfoCard'
 import './Home.scss'
 const Home = () => {
   const navigate = useNavigate()

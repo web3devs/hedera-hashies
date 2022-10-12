@@ -3,7 +3,7 @@ import './App.scss'
 import AddEventPage from './pages/AddEvent.page'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import HomePage from './pages/Home.page'
-import NavBar from './componeont/NavBar'
+import NavBar from './components/NavBar'
 import ConfirmationPage from './pages/Confirmation.page'
 import { HederaProvider } from './context/HederaProvider'
 

@@ -5,9 +5,9 @@ import { InputNumber } from 'primereact/inputnumber'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { RadioButton } from 'primereact/radiobutton'
-import Card from '../componeont/Card'
-import Label from '../componeont/Label'
-import SwitchableField from '../componeont/SwitchableField'
+import Card from '../components/Card'
+import Label from '../components/Label'
+import SwitchableField from '../components/SwitchableField'
 import { useHeaderAccess } from '../context/HederaProvider'
 import {
   ContractExecuteTransaction,
