@@ -10,9 +10,7 @@ export default () => {
       <div className="text-6xl text-white mb-4 font-normal">
         Proof of attendance
       </div>
-      <div className="text-6xl text-primary font-normal mt-4 mb-4">
-        #hashie.net
-      </div>
+      <div className="text-6xl text-primary font-normal mt-4 mb-4">#hashie</div>
       <div className="text mb-4">
         Create events for your communities and prove that they were there.
       </div>

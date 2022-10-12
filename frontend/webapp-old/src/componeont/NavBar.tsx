@@ -12,7 +12,7 @@ export default () => {
         }}
       >
         <Logo />
-        <span className="text-white font-bold ml-2">hashie.net</span>
+        <span className="text-white font-bold ml-2">hashie</span>
       </div>
       <ConnectWalletButton />
     </div>
