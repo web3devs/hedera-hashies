@@ -134,7 +134,7 @@ const EventDetails = () => {
             )}
             {!loading && (
               <div className="text-lg text-left text-white col-9 pl-4">
-                {name}
+                <h2 className="mt-0">{name}</h2>
               </div>
             )}
             <div className={`col-${url ? '6' : '12'} grid grid-nogutter`}>
