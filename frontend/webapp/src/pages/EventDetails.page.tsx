@@ -117,11 +117,11 @@ const EventDetails = () => {
   }, [collectionId, name, description, image])
 
   useEffect(() => {
-    if (collectionId && signer) {
+    if (collectionId) {
       const tokensMinted = getMintedTokens(collectionId)
       setMintedNum(tokensMinted)
     }
-  }, [collectionId, nfts, signer])
+  }, [collectionId, nfts])
 
   const handleMint = async () => {
     if (!collectionId || !signer) {
