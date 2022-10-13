@@ -65,14 +65,14 @@ const EventDetails = () => {
       setDescription(description)
       setName(name)
 
-      //mock data
       setCreatedAt(new Date(createdAt))
       setFromDate(new Date(timeLimitFrom))
       setEndDate(new Date(timeLimitTo))
       setLimit(quantity)
       setSecretCode(secretCode)
-      setMintedNum(0)
 
+      //mock data
+      setMintedNum(0)
       //end mock data
       isLoading(false)
     }
