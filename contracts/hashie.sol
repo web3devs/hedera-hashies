@@ -175,7 +175,10 @@ contract Hashie is HederaTokenService, KeyHelper, ExpiryHelper, FeeHelper {
         int64 serial
     ) private {
         int associateResponse = associateToken(receiver, htsCollectionId);
-        if (associateResponse != HederaResponseCodes.SUCCESS) {
+        if (
+            associateResponse != HederaResponseCodes.SUCCESS &&
+            associateResponse != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
+        ) {
             revert HTSAssociateCollectionFailed(receiver, associateResponse);
         }
         int response = transferNFT(htsCollectionId, address(this), receiver, serial);
