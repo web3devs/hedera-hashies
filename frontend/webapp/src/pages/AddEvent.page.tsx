@@ -25,7 +25,7 @@ const AddEvent = () => {
   const [fromDate, setFromDate] = useState<Date>(new Date())
   const [quantity, setQuantity] = useState<number | null>()
   const [secretCode, setSecretCode] = useState<string>('')
-  const [url, setUrl] = useState<string | null>()
+  const [url, setUrl] = useState<string>('')
   const [toDate, setToDate] = useState<Date>(new Date())
   const [description, setDescription] = useState('')
   const { isConnected, connect, signer } = useHeaderAccess()
@@ -117,7 +117,11 @@ const AddEvent = () => {
           className="mb-4"
         />
         <Label className="">Event URL</Label>
-        <InputText className="mb-4" />
+        <InputText
+          value={url}
+          className="mb-4"
+          onChange={(e) => setUrl(e.target.value)}
+        />
         <Label className="">Event Description</Label>
         <InputTextarea
           rows={10}
