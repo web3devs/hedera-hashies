@@ -23,6 +23,7 @@ const EventDetails = () => {
   const [secretCode, setSecretCode] = useState<string | null>(null)
   const [inputSecretCode, setInputSecretCode] = useState<string>('')
   const [limit, setLimit] = useState(100)
+  const [url, setURL] = useState<string | null>(null)
   const [name, setName] = useState<string | null>(null)
   const [image, setImage] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
@@ -54,7 +55,8 @@ const EventDetails = () => {
         timeLimitTo,
         quantity,
         createdAt,
-        secretCode
+        secretCode,
+        url
       } = data
       if (image.startsWith('ipfs://')) {
         const [, , imageCid, imageFileName] = image.split('/')
@@ -64,6 +66,7 @@ const EventDetails = () => {
       }
       setDescription(description)
       setName(name)
+      setURL(url)
 
       setCreatedAt(new Date(createdAt))
       setFromDate(new Date(timeLimitFrom))
@@ -134,12 +137,24 @@ const EventDetails = () => {
                 {name}
               </div>
             )}
-            <div className="text-sm text-left col-12 mt-4">
-              Event description
+            <div className={`col-${url ? '6' : '12'} grid grid-nogutter`}>
+              <div className="text-sm text-left col-12 mt-4">
+                Event description
+              </div>
+              <div className="text-sm text-left text-white col-12 mt-2">
+                {description}
+              </div>
             </div>
-            <div className="text-sm text-left text-white col-12 mt-2">
-              {description}
-            </div>
+            {url && (
+              <div className="col-6 grid grid-nogutter">
+                <div className="text-sm text-left col-12 mt-4">URL</div>
+                <div className="text-sm text-left text-white col-12 mt-2">
+                  <a href={url} target="_blank" rel="noreferrer">
+                    {url}
+                  </a>
+                </div>
+              </div>
+            )}
             <div className="col-12 grid grid-nogutter mt-4">
               <div className="flex flex-column col-6">
                 <div className="text-sm text-left">Start date</div>
@@ -178,7 +193,6 @@ const EventDetails = () => {
                 />
               </>
             )}
-
             <div className="col-12 mb-4 flex flex-column align-items-center">
               <Button
                 label="Mint Hashie!"
