@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from 'primereact/button'
 import Card from '../components/Card'
 import Star from '../assets/img-star.svg'
@@ -11,10 +11,11 @@ import {
   // Hbar
 } from '@hashgraph/sdk'
 import HashieConfig from '../settings.json'
-import { InputText } from 'primereact'
+import { InputText, Toast } from 'primereact'
 
 const EventDetails = () => {
   const { code: collectionId } = useParams()
+  const toast = useRef<any>()
   const [loading, isLoading] = useState<boolean>(true)
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [fromDate, setFromDate] = useState<Date | null>(null)
@@ -122,6 +123,10 @@ const EventDetails = () => {
     }
   }
 
+  const eventDetailsUrl = useMemo(() => {
+    return `https://hashie.net/event/${collectionId}`
+  }, [collectionId])
+
   return (
     <div className="flex justify-content-center align-items-center">
       <Card className="w-7 grid grid-nogutter">
@@ -196,13 +201,26 @@ const EventDetails = () => {
             <div className="col-12 mb-4 flex flex-column align-items-center">
               <Button
                 label="Mint Hashie!"
-                className="submit mt-4"
+                className="submit mt-4 pr-4 pl-4"
                 onClick={handleMint}
                 disabled={blockMint}
               />
             </div>
             <div className="col-12 text-xs">
-              <p>Event id: {collectionId}</p>
+              <div className="flex justify-content-center align-items-center">
+                <span>Event id: {collectionId}</span>
+                <Button
+                  icon="pi pi-copy"
+                  className="p-button-text"
+                  onClick={() => {
+                    navigator.clipboard.writeText(eventDetailsUrl)
+                    toast?.current?.show({
+                      severity: 'info',
+                      summary: 'URL copied to clipboard'
+                    })
+                  }}
+                />
+              </div>
               <p>Created on {createdAt?.toLocaleString()}</p>
             </div>
           </>
@@ -218,6 +236,7 @@ const EventDetails = () => {
           </>
         )}
       </Card>
+      <Toast ref={toast} position="top-center" />
     </div>
   )
 }
