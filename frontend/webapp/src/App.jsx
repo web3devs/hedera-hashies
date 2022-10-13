@@ -7,6 +7,7 @@ import NavBar from './components/NavBar'
 import ConfirmationPage from './pages/EventDetails.page'
 import MintPage from './pages/Mint.page'
 import { HederaProvider } from './context/HederaProvider'
+import { HederaAPIProvider } from './context/HederaAPIProvider'
 
 const router = createBrowserRouter([
   {
@@ -29,10 +30,12 @@ const router = createBrowserRouter([
 const App = () => {
   return (
     <div className="App bg">
-      <HederaProvider>
-        <NavBar />
-        <RouterProvider router={router} />
-      </HederaProvider>
+      <HederaAPIProvider>
+        <HederaProvider>
+          <NavBar />
+          <RouterProvider router={router} />
+        </HederaProvider>
+      </HederaAPIProvider>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import Star from '../assets/img-star.svg'
 import './EventDetails.scss'
 import { useParams } from 'react-router-dom'
 import { useHeaderAccess } from '../context/HederaProvider'
+import { useHeaderAPI } from '../context/HederaAPIProvider'
 import {
   ContractExecuteTransaction,
   ContractFunctionParameters
@@ -29,19 +30,48 @@ const EventDetails = () => {
   const [image, setImage] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
   const { signer } = useHeaderAccess()
+  const { nfts, getMintedTokens, hasToken } = useHeaderAPI()
 
   const blockMint = useMemo(() => {
-    const now = new Date().getTime()
-    const isAfterDeadline = now > (endDate?.getTime() || 0)
-    const isBeforeStart = now < (fromDate?.getTime() || 0)
-    const isSecretNotValid = secretCode ? secretCode !== inputSecretCode : false
+    if (collectionId && signer) {
+      const now = new Date().getTime()
+      const isAfterDeadline = now > (endDate?.getTime() || 0)
+      const isBeforeStart = now < (fromDate?.getTime() || 0)
+      const isSecretNotValid = secretCode
+        ? secretCode !== inputSecretCode
+        : false
+      const hasNFT = hasToken(collectionId, signer?.getAccountId().toString())
 
-    const isOverLimit = limit && mintedNum >= limit
-    return isOverLimit || isAfterDeadline || isBeforeStart || isSecretNotValid
-  }, [limit, mintedNum, fromDate, endDate, secretCode, inputSecretCode])
+      const isOverLimit = limit && mintedNum >= limit
+      return (
+        isOverLimit ||
+        isAfterDeadline ||
+        isBeforeStart ||
+        isSecretNotValid ||
+        hasNFT
+      )
+    }
+    return true
+  }, [
+    limit,
+    mintedNum,
+    fromDate,
+    endDate,
+    secretCode,
+    inputSecretCode,
+    nfts,
+    collectionId,
+    signer
+  ])
+
   useEffect(() => {
     const _fetch = async () => {
       isLoading(true)
+      if (!collectionId) {
+        isLoading(false)
+        return
+      }
+
       const response = await fetch(
         `https://ipfs.io/ipfs/${collectionId}/metadata.json`
       )
@@ -68,16 +98,12 @@ const EventDetails = () => {
       setDescription(description)
       setName(name)
       setURL(url)
-
       setCreatedAt(new Date(createdAt))
       setFromDate(new Date(timeLimitFrom))
       setEndDate(new Date(timeLimitTo))
       setLimit(quantity)
       setSecretCode(secretCode)
 
-      //mock data
-      setMintedNum(0)
-      //end mock data
       isLoading(false)
     }
     if (
@@ -89,6 +115,13 @@ const EventDetails = () => {
       _fetch()
     }
   }, [collectionId, name, description, image])
+
+  useEffect(() => {
+    if (collectionId && signer) {
+      const tokensMinted = getMintedTokens(collectionId)
+      setMintedNum(tokensMinted)
+    }
+  }, [collectionId, nfts, signer])
 
   const handleMint = async () => {
     if (!collectionId || !signer) {
