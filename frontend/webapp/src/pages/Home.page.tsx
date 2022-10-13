@@ -1,7 +1,7 @@
 import { Button } from 'primereact/button'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import InfoCard from '../components/home/InfoCard'
+// import InfoCard from '../components/home/InfoCard'
 import './Home.scss'
 const Home = () => {
   const navigate = useNavigate()
@@ -19,7 +19,7 @@ const Home = () => {
         className="create-event mb-8"
         onClick={() => navigate('/add-event')}
       />
-      <InfoCard />
+      {/* <InfoCard /> */}
     </div>
   )
 }
