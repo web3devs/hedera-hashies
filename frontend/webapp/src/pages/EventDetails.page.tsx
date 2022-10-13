@@ -15,7 +15,7 @@ import { InputText, Toast } from 'primereact'
 
 const EventDetails = () => {
   const { code: collectionId } = useParams()
-  const toast = useRef<any>()
+  const toast = useRef<Toast>(null)
   const [loading, isLoading] = useState<boolean>(true)
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [fromDate, setFromDate] = useState<Date | null>(null)
@@ -137,11 +137,10 @@ const EventDetails = () => {
             ) : (
               <img src={Star} alt="Placeholder image" className="col-3" />
             )}
-            {!loading && (
-              <div className="text-lg text-left text-white col-9 pl-4">
-                <h2 className="mt-0">{name}</h2>
-              </div>
-            )}
+            <div className="text-lg text-left text-white col-9 pl-4">
+              <h2 className="mt-0">{name}</h2>
+            </div>
+
             <div className={`col-${url ? '6' : '12'} grid grid-nogutter`}>
               <div className="text-sm text-left col-12 mt-4">
                 Event description
