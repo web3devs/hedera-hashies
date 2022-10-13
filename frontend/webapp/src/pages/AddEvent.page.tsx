@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from 'primereact/button'
 import { Calendar } from 'primereact/calendar'
 import { InputNumber } from 'primereact/inputnumber'
@@ -17,15 +17,31 @@ import HashieConfig from '../settings.json'
 import { storeNFT, HashieToken } from '../helpers/ipfs'
 
 import './AddEvent.scss'
+import { validate } from 'validate.js'
+
+const constraints = {
+  eventName: {
+    presence: { allowEmpty: false }
+  },
+  description: {
+    presence: { allowEmpty: false }
+  },
+  selectedImage: {
+    presence: { allowEmpty: false }
+  },
+  url: { url: true }
+}
 
 const AddEvent = () => {
   const [eventName, setEventName] = useState<string>('')
+  const [isTouched, setIsTouched] = useState(false)
+  const [errors, setErrors] = useState<{ [key: string]: string[] }>()
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [paymentOption, setPaymentOption] = useState<string>('Free')
   const [fromDate, setFromDate] = useState<Date>(new Date())
   const [quantity, setQuantity] = useState<number | null>()
   const [secretCode, setSecretCode] = useState<string>('')
-  const [url, setUrl] = useState<string>('')
+  const [url, setUrl] = useState<string | undefined>()
   const [toDate, setToDate] = useState<Date>(new Date())
   const [description, setDescription] = useState('')
   const { isConnected, connect, signer } = useHeaderAccess()
@@ -34,11 +50,36 @@ const AddEvent = () => {
 
   const fileUploadRef = useRef(null)
 
+  const isValid = useMemo(() => {
+    if (!isTouched) {
+      return true
+    }
+    return (
+      !errors?.eventName &&
+      !errors?.description &&
+      !errors?.url &&
+      !errors?.selectedImage
+    )
+  }, [errors, isTouched])
+
+  useEffect(() => {
+    if (!isTouched) {
+      setErrors({})
+      return
+    }
+    const form = { eventName, description, url, selectedImage }
+
+    const err = validate(form, constraints)
+
+    setErrors(err)
+  }, [description, eventName, selectedImage, url, isTouched])
+
   const handleConnect = async () => {
     connect()
   }
 
   const handleSubmit = async () => {
+    setIsTouched(true)
     if (!signer) {
       throw new Error('No signer!')
     }
@@ -47,7 +88,6 @@ const AddEvent = () => {
     }
     try {
       setIsLoading(true)
-
       const hashie = new HashieToken()
       hashie.name = eventName
       hashie.description = description
@@ -110,13 +150,15 @@ const AddEvent = () => {
     <div className="flex flex-column justify-content-center align-items-center h-full">
       <h1 className="text-2xl font-bold text-white">Create a new event</h1>
       <Card className="flex flex-column add-event">
-        <Label className="">Event Name</Label>
+        <Label className="">Event Name *</Label>
         <InputText
           value={eventName}
           onChange={(e) => setEventName(e.target.value)}
-          className="mb-4"
         />
-        <Label className="">Select on Image</Label>
+        <small className="p-error block text-xs text-left mb-4">
+          {errors?.eventName}
+        </small>
+        <Label className="">Select on Image *</Label>
         <div className="flex flex-start gap-2 mb-2">
           <input
             type="file"
@@ -124,20 +166,29 @@ const AddEvent = () => {
             onChange={(e) => handleSelectImage(e.target.files)}
           />
         </div>
-        <Label className="">Event Description</Label>
+        <small className="p-error block text-xs text-left mb-4">
+          {errors?.selectedImage}
+        </small>
+        <Label className="">Event Description *</Label>
         <InputTextarea
           rows={10}
           cols={30}
-          className="mb-4"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        <small className="p-error block text-xs text-left mb-4">
+          {errors?.selectedImage}
+        </small>
         <Label className="">Event URL</Label>
         <InputText
           value={url}
-          className="mb-4"
-          onChange={(e) => setUrl(e.target.value)}
-        />
+          onChange={(e) =>
+            setUrl(e.target.value.length === 0 ? undefined : e.target.value)
+          }
+        />{' '}
+        <small className="p-error block text-xs text-left mb-4">
+          {errors?.url}
+        </small>
         <SwitchableField
           title="Limited quantity"
           className=""
@@ -229,7 +280,7 @@ const AddEvent = () => {
             className="submit mt-4"
             loading={isLoading}
             onClick={handleSubmit}
-            disabled={eventId !== null}
+            disabled={eventId !== null || !isValid}
           />
         ) : (
           <Button
