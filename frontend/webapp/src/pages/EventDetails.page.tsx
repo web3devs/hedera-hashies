@@ -69,14 +69,14 @@ const EventDetails = () => {
             .addString(collectionId)
             .addAddress(accountId)
         )
-        .setGas(9000000) // TODO Use a gas calculator
+        .setGas(10000000) // TODO Use a gas calculator
         .freezeWithSigner(signer)
 
       const result = await tx.executeWithSigner(signer)
-      console.log(result)
+      console.log('result:', result)
       if (result) {
         const record = result.getRecordWithSigner(signer)
-        console.log(record)
+        console.log('record:', record)
       }
     } catch (e) {
       console.error(e)

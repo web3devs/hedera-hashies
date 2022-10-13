@@ -14,7 +14,7 @@ import {
   ContractFunctionParameters
 } from '@hashgraph/sdk'
 import HashieConfig from '../settings.json'
-import { storeNFT } from '../helpers/ipfs'
+import { storeNFT, HashieToken } from '../helpers/ipfs'
 
 import './AddEvent.scss'
 
@@ -23,6 +23,7 @@ const AddEvent = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [paymentOption, setPaymentOption] = useState<string>('Free')
   const [fromDate, setFromDate] = useState<Date>(new Date())
+  const [toDate, setToDate] = useState<Date>(new Date())
   const [description, setDescription] = useState('')
   const { isConnected, connect, signer } = useHeaderAccess()
   const [isLoading, setIsLoading] = useState(false)
@@ -48,12 +49,21 @@ const AddEvent = () => {
     try {
       setIsLoading(true)
 
-      const t = await storeNFT(selectedImage, eventName, description) // FIXME The smart contract call fails when description has quotes around it
+      const hashie = new HashieToken()
+      hashie.name = eventName
+      hashie.description = description
+      hashie.image = selectedImage
+      hashie.url = 'someurl.com'
+      hashie.timeLimitFrom = fromDate.toISOString()
+      hashie.timeLimitTo = toDate.toISOString()
+      console.log('hashie: ', hashie)
+
+      const t = await storeNFT(hashie)
       const metadataURL = `https://ipfs.io/ipfs/${t.ipnft}/metadata.json`
       console.log('metadataURL: ', metadataURL)
 
       const _eventId = t.ipnft
-      console.log(_eventId)
+      console.log('_eventId:', _eventId)
 
       const tx = await new ContractExecuteTransaction()
         .setContractId(HashieConfig.address)
@@ -68,11 +78,11 @@ const AddEvent = () => {
         .freezeWithSigner(signer)
 
       const result = await tx.executeWithSigner(signer)
-      console.log(result)
+      console.log('result:', result)
       setIsLoading(false)
       setEventId(_eventId)
 
-      window.location.href = `${window.location.origin}/confirmation/${_eventId}`
+      window.location.href = `${window.location.origin}/event/${_eventId}`
     } catch (e) {
       console.error(e)
     } finally {
@@ -144,7 +154,7 @@ const AddEvent = () => {
               <Calendar
                 dateFormat="dd/mm/yy"
                 value={fromDate}
-                onChange={(e) => setFromDate(e.value as Date)}
+                onChange={(e) => setToDate(e.value as Date)}
                 showTime
               />
             </div>
