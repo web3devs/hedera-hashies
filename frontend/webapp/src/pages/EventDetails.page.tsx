@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Button } from 'primereact/button'
 import Card from '../components/Card'
 import Star from '../assets/img-star.svg'
-import './Confirmation.scss'
+import './EventDetails.scss'
 import { useParams } from 'react-router-dom'
 import { useHeaderAccess } from '../context/HederaProvider'
 import {
@@ -12,7 +12,7 @@ import {
 } from '@hashgraph/sdk'
 import HashieConfig from '../settings.json'
 
-const Confirmation = () => {
+const EventDetails = () => {
   const { code: collectionId } = useParams()
   const [loading, isLoading] = useState<boolean>(true)
   const [name, setName] = useState<string | null>(null)
@@ -132,4 +132,4 @@ const Confirmation = () => {
   )
 }
 
-export default Confirmation
+export default EventDetails

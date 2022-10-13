@@ -4,7 +4,7 @@ import AddEventPage from './pages/AddEvent.page'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import HomePage from './pages/Home.page'
 import NavBar from './components/NavBar'
-import ConfirmationPage from './pages/Confirmation.page'
+import ConfirmationPage from './pages/EventDetails.page'
 import MintPage from './pages/Mint.page'
 import { HederaProvider } from './context/HederaProvider'
 
@@ -18,7 +18,7 @@ const router = createBrowserRouter([
     element: <AddEventPage />
   },
   {
-    path: '/confirmation/:code',
+    path: '/event/:code',
     element: <ConfirmationPage />
   },
   {
