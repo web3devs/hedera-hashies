@@ -68,6 +68,7 @@ const AddEvent = () => {
         .freezeWithSigner(signer)
 
       const result = await tx.executeWithSigner(signer)
+      console.log(result)
       setIsLoading(false)
       setEventId(_eventId)
 

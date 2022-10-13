@@ -7,8 +7,8 @@ import { useParams } from 'react-router-dom'
 import { useHeaderAccess } from '../context/HederaProvider'
 import {
   ContractExecuteTransaction,
-  ContractFunctionParameters,
-  Hbar
+  ContractFunctionParameters
+  // Hbar
 } from '@hashgraph/sdk'
 import HashieConfig from '../settings.json'
 
