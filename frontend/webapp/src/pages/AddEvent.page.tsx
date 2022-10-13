@@ -116,21 +116,6 @@ const AddEvent = () => {
           onChange={(e) => setEventName(e.target.value)}
           className="mb-4"
         />
-        <Label className="">Event URL</Label>
-        <InputText
-          value={url}
-          className="mb-4"
-          onChange={(e) => setUrl(e.target.value)}
-        />
-        <Label className="">Event Description</Label>
-        <InputTextarea
-          rows={10}
-          cols={30}
-          className="mb-4"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
         <Label className="">Select on Image</Label>
         <div className="flex flex-start gap-2 mb-2">
           <input
@@ -139,6 +124,20 @@ const AddEvent = () => {
             onChange={(e) => handleSelectImage(e.target.files)}
           />
         </div>
+        <Label className="">Event Description</Label>
+        <InputTextarea
+          rows={10}
+          cols={30}
+          className="mb-4"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <Label className="">Event URL</Label>
+        <InputText
+          value={url}
+          className="mb-4"
+          onChange={(e) => setUrl(e.target.value)}
+        />
         <SwitchableField
           title="Limited quantity"
           className=""
