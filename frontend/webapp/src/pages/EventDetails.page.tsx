@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Button } from 'primereact/button'
 import Card from '../components/Card'
 import Star from '../assets/img-star.svg'
@@ -15,11 +15,25 @@ import HashieConfig from '../settings.json'
 const EventDetails = () => {
   const { code: collectionId } = useParams()
   const [loading, isLoading] = useState<boolean>(true)
+  const [endDate, setEndDate] = useState<Date | null>(null)
+  const [fromDate, setFromDate] = useState<Date | null>(null)
+  const [createdAt, setCreatedAt] = useState(new Date())
+  const [mintedNum, setMintedNum] = useState(0)
+  const [limit, setLimit] = useState(100)
   const [name, setName] = useState<string | null>(null)
   const [image, setImage] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
   const { signer } = useHeaderAccess()
 
+  const blockMint = useMemo(() => {
+    const now = new Date().getTime()
+    console.log(new Date(now), endDate)
+    const isAfterDeadline = now > (endDate?.getTime() || 0)
+    const isBeforeStart = now < (fromDate?.getTime() || 0)
+
+    console.log(mintedNum >= limit, isAfterDeadline, isBeforeStart)
+    return mintedNum >= limit || isAfterDeadline || isBeforeStart
+  }, [limit, mintedNum, fromDate, endDate])
   useEffect(() => {
     const _fetch = async () => {
       isLoading(true)
@@ -38,6 +52,14 @@ const EventDetails = () => {
       }
       setDescription(description)
       setName(name)
+
+      //mock data
+      setCreatedAt(new Date('2022-02-22'))
+      setFromDate(new Date('2022-09-22'))
+      setEndDate(new Date('2022-10-14'))
+      setLimit(100)
+      setMintedNum(11)
+      //end mock data
       isLoading(false)
     }
     if (
@@ -104,16 +126,44 @@ const EventDetails = () => {
             <div className="text-sm text-left text-white col-12 mt-2">
               {description}
             </div>
+            <div className="col-12 grid grid-nogutter mt-4">
+              <div className="flex flex-column col-6">
+                <div className="text-sm text-left">Start date</div>
+                <div className="text-sm text-left text-white mt-2">
+                  {fromDate?.toLocaleString()}
+                </div>
+              </div>
+              <div className="flex flex-column col-6">
+                <div className="text-sm text-left">End date</div>
+                <div className="text-sm text-left text-white mt-2">
+                  {mintedNum}
+                </div>
+              </div>
+            </div>
+            <div className="col-12 grid grid-nogutter mt-4">
+              <div className="flex flex-column col-6">
+                <div className="text-sm text-left">Tokens minted</div>
+                <div className="text-sm text-left text-white mt-2">
+                  {mintedNum}
+                </div>
+              </div>
+              <div className="flex flex-column col-6">
+                <div className="text-sm text-left">Token limit</div>
+                <div className="text-sm text-left text-white mt-2">{limit}</div>
+              </div>
+            </div>
+
             <div className="col-12 mb-4 flex flex-column align-items-center">
               <Button
                 label="Mint Hashie!"
                 className="submit mt-4"
                 onClick={handleMint}
+                disabled={blockMint}
               />
             </div>
             <div className="col-12 text-xs">
               <p>Event id: {collectionId}</p>
-              <p>Created on 6.06.2022, 04:43:19</p>
+              <p>Created on {createdAt?.toLocaleString()}</p>
             </div>
           </>
         ) : (

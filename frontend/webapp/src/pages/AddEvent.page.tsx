@@ -32,11 +32,7 @@ const AddEvent = () => {
   const fileUploadRef = useRef(null)
 
   const handleConnect = async () => {
-    setIsLoading(true)
     connect()
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 2000)
   }
 
   const handleSubmit = async () => {
