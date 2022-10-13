@@ -11,6 +11,7 @@ import {
   // Hbar
 } from '@hashgraph/sdk'
 import HashieConfig from '../settings.json'
+import { InputText } from 'primereact'
 
 const EventDetails = () => {
   const { code: collectionId } = useParams()
@@ -19,6 +20,8 @@ const EventDetails = () => {
   const [fromDate, setFromDate] = useState<Date | null>(null)
   const [createdAt, setCreatedAt] = useState(new Date())
   const [mintedNum, setMintedNum] = useState(0)
+  const [secretCode, setSecretCode] = useState<string | null>(null)
+  const [inputSecretCode, setInputSecretCode] = useState<string>('')
   const [limit, setLimit] = useState(100)
   const [name, setName] = useState<string | null>(null)
   const [image, setImage] = useState<string | null>(null)
@@ -27,13 +30,13 @@ const EventDetails = () => {
 
   const blockMint = useMemo(() => {
     const now = new Date().getTime()
-    console.log(new Date(now), endDate)
     const isAfterDeadline = now > (endDate?.getTime() || 0)
     const isBeforeStart = now < (fromDate?.getTime() || 0)
+    const isSecretNotValid = secretCode ? secretCode !== inputSecretCode : false
 
-    console.log(mintedNum >= limit, isAfterDeadline, isBeforeStart)
-    return mintedNum >= limit || isAfterDeadline || isBeforeStart
-  }, [limit, mintedNum, fromDate, endDate])
+    const isOverLimit = limit && mintedNum >= limit
+    return isOverLimit || isAfterDeadline || isBeforeStart || isSecretNotValid
+  }, [limit, mintedNum, fromDate, endDate, secretCode, inputSecretCode])
   useEffect(() => {
     const _fetch = async () => {
       isLoading(true)
@@ -43,7 +46,16 @@ const EventDetails = () => {
       const data = await response.json()
       console.log(data)
       console.log(window.location.origin)
-      const { description, image, name } = data
+      const {
+        description,
+        image,
+        name,
+        timeLimitFrom,
+        timeLimitTo,
+        quantity,
+        createdAt,
+        secretCode
+      } = data
       if (image.startsWith('ipfs://')) {
         const [, , imageCid, imageFileName] = image.split('/')
         setImage(`https://ipfs.io/ipfs/${imageCid}/${imageFileName}`)
@@ -54,11 +66,13 @@ const EventDetails = () => {
       setName(name)
 
       //mock data
-      setCreatedAt(new Date('2022-02-22'))
-      setFromDate(new Date('2022-09-22'))
-      setEndDate(new Date('2022-10-14'))
-      setLimit(100)
-      setMintedNum(11)
+      setCreatedAt(new Date(createdAt))
+      setFromDate(new Date(timeLimitFrom))
+      setEndDate(new Date(timeLimitTo))
+      setLimit(quantity)
+      setSecretCode(secretCode)
+      setMintedNum(0)
+
       //end mock data
       isLoading(false)
     }
@@ -130,13 +144,13 @@ const EventDetails = () => {
               <div className="flex flex-column col-6">
                 <div className="text-sm text-left">Start date</div>
                 <div className="text-sm text-left text-white mt-2">
-                  {fromDate?.toLocaleString()}
+                  {fromDate ? fromDate?.toLocaleString() : '-'}
                 </div>
               </div>
               <div className="flex flex-column col-6">
                 <div className="text-sm text-left">End date</div>
                 <div className="text-sm text-left text-white mt-2">
-                  {mintedNum}
+                  {endDate ? endDate?.toLocaleString() : '-'}
                 </div>
               </div>
             </div>
@@ -149,9 +163,21 @@ const EventDetails = () => {
               </div>
               <div className="flex flex-column col-6">
                 <div className="text-sm text-left">Token limit</div>
-                <div className="text-sm text-left text-white mt-2">{limit}</div>
+                <div className="text-sm text-left text-white mt-2">
+                  {limit || '-'}
+                </div>
               </div>
             </div>
+            {secretCode && (
+              <>
+                <div className="text-sm text-left col-12 mt-4">Secret code</div>
+                <InputText
+                  value={inputSecretCode}
+                  onChange={(e) => setInputSecretCode(e.target.value)}
+                  className="mb-4 col-12 pr-4 pl-4"
+                />
+              </>
+            )}
 
             <div className="col-12 mb-4 flex flex-column align-items-center">
               <Button

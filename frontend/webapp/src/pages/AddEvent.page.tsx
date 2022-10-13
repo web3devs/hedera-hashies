@@ -23,6 +23,9 @@ const AddEvent = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [paymentOption, setPaymentOption] = useState<string>('Free')
   const [fromDate, setFromDate] = useState<Date>(new Date())
+  const [quantity, setQuantity] = useState<number | null>()
+  const [secretCode, setSecretCode] = useState<string>('')
+  const [url, setUrl] = useState<string | null>()
   const [toDate, setToDate] = useState<Date>(new Date())
   const [description, setDescription] = useState('')
   const { isConnected, connect, signer } = useHeaderAccess()
@@ -49,9 +52,19 @@ const AddEvent = () => {
       hashie.name = eventName
       hashie.description = description
       hashie.image = selectedImage
-      hashie.url = 'someurl.com'
+      if (url) {
+        hashie.url = url
+      }
       hashie.timeLimitFrom = fromDate.toISOString()
       hashie.timeLimitTo = toDate.toISOString()
+      hashie.createdAt = new Date().toISOString()
+      if (quantity) {
+        hashie.quantity = quantity
+      }
+      if (secretCode) {
+        hashie.secretCode = secretCode
+      }
+
       console.log('hashie: ', hashie)
 
       const t = await storeNFT(hashie)
@@ -128,7 +141,13 @@ const AddEvent = () => {
           subtitle="You can set the maximum number of times the FLOAT can be minted."
         >
           <Label className="">Amount</Label>
-          <InputNumber className="mb-4 w-50 align-self-start" />
+          <InputNumber
+            className="mb-4 w-50 align-self-start"
+            value={quantity}
+            onChange={(e) => {
+              setQuantity(e.value)
+            }}
+          />
         </SwitchableField>
         <SwitchableField
           title="Time limit"
@@ -161,7 +180,11 @@ const AddEvent = () => {
           subtitle="Your FLOAT can only be minted if people know the secret code."
         >
           <Label className="">Code</Label>
-          <InputText className="mb-2" />
+          <InputText
+            className="mb-2"
+            value={secretCode}
+            onChange={(e) => setSecretCode(e.target.value)}
+          />
         </SwitchableField>
         <div className="text-left text-sm flex-grow-1 text-white mb-2">
           Payment options
