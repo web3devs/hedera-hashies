@@ -177,7 +177,7 @@ const AddEvent = () => {
           onChange={(e) => setDescription(e.target.value)}
         />
         <small className="p-error block text-xs text-left mb-4">
-          {errors?.selectedImage}
+          {errors?.description}
         </small>
         <Label className="">Event URL</Label>
         <InputText
