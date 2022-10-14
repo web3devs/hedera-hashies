@@ -38,11 +38,11 @@ const AddEvent = () => {
   const [errors, setErrors] = useState<{ [key: string]: string[] }>()
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [paymentOption, setPaymentOption] = useState<string>('Free')
-  const [fromDate, setFromDate] = useState<Date>(new Date())
+  const [fromDate, setFromDate] = useState<Date | undefined>()
+  const [toDate, setToDate] = useState<Date | undefined>()
   const [quantity, setQuantity] = useState<number | null>()
   const [secretCode, setSecretCode] = useState<string>('')
   const [url, setUrl] = useState<string | undefined>()
-  const [toDate, setToDate] = useState<Date>(new Date())
   const [description, setDescription] = useState('')
   const { isConnected, connect, signer } = useHeaderAccess()
   const [isLoading, setIsLoading] = useState(false)
@@ -95,8 +95,8 @@ const AddEvent = () => {
       if (url) {
         hashie.url = url
       }
-      hashie.timeLimitFrom = fromDate.toISOString()
-      hashie.timeLimitTo = toDate.toISOString()
+      hashie.timeLimitFrom = fromDate?.toISOString()
+      hashie.timeLimitTo = toDate?.toISOString()
       hashie.createdAt = new Date().toISOString()
       if (quantity) {
         hashie.quantity = quantity

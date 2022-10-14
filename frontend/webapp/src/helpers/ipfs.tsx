@@ -10,8 +10,8 @@ class HashieToken {
   description!: string
   image!: File
   quantity!: number
-  timeLimitFrom!: string
-  timeLimitTo!: string
+  timeLimitFrom!: string | undefined
+  timeLimitTo!: string | undefined
   secretCode!: string
   price!: string
   createdAt!: string
