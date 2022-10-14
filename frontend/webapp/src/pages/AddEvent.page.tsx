@@ -52,7 +52,7 @@ const AddEvent = () => {
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [eventId, setEventId] = useState<string | null>(null)
 
-  const fileUploadRef = useRef(null)
+  const fileUploadRef = useRef<HTMLInputElement>(null)
 
   const isValid = useMemo(() => {
     if (!isTouched) {
@@ -179,10 +179,19 @@ const AddEvent = () => {
         </small>
         <Label className="">Select on Image *</Label>
         <div className="flex flex-start gap-2 mb-2">
+          <Button
+            onClick={() => {
+              fileUploadRef?.current?.click()
+            }}
+            className="p-button-outlined"
+          >
+            Select an Image
+          </Button>
           <input
             type="file"
             ref={fileUploadRef}
             onChange={(e) => handleSelectImage(e.target.files)}
+            style={{ display: 'none' }}
           />
         </div>
         <small className="p-error block text-xs text-left mb-4">
