@@ -110,6 +110,13 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
       )
       setPairingData(initData.savedPairings[0])
       await hashConnect.connect()
+      const hcProvider = hashConnect.getProvider(
+        'testnet',
+        hashConnect.hcData.topic,
+        hashConnect.hcData.pairingData[0].accountIds[0]
+      )
+      const hcSigner = hashConnect.getSigner(hcProvider)
+      setSigner(hcSigner)
     })()
   }, [meta])
 
