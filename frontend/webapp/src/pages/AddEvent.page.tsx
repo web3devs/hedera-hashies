@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Button } from 'primereact/button'
 import { Calendar } from 'primereact/calendar'
 import { InputNumber } from 'primereact/inputnumber'
@@ -18,6 +18,8 @@ import { storeNFT, HashieToken } from '../helpers/ipfs'
 
 import './AddEvent.scss'
 import { validate } from 'validate.js'
+import { Dialog } from 'primereact/dialog'
+import { useNavigate } from 'react-router-dom'
 
 const constraints = {
   eventName: {
@@ -33,6 +35,7 @@ const constraints = {
 }
 
 const AddEvent = () => {
+  const navigate = useNavigate()
   const [eventName, setEventName] = useState<string>('')
   const [isTouched, setIsTouched] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string[] }>()
@@ -46,6 +49,7 @@ const AddEvent = () => {
   const [description, setDescription] = useState('')
   const { isConnected, connect, signer } = useHeaderAccess()
   const [isLoading, setIsLoading] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
   const [eventId, setEventId] = useState<string | null>(null)
 
   const fileUploadRef = useRef(null)
@@ -61,6 +65,20 @@ const AddEvent = () => {
       !errors?.selectedImage
     )
   }, [errors, isTouched])
+
+  const resetForm = () => {
+    setEventId(null)
+    setEventName('')
+    setIsTouched(false)
+    setDescription('')
+    setSelectedImage(null)
+    setPaymentOption('Free')
+    setFromDate(undefined)
+    setToDate(undefined)
+    setUrl('')
+    setSecretCode('')
+    setQuantity(null)
+  }
 
   useEffect(() => {
     if (!isTouched) {
@@ -78,13 +96,16 @@ const AddEvent = () => {
     connect()
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     setIsTouched(true)
     if (!signer) {
       throw new Error('No signer!')
     }
     if (!selectedImage) {
       throw new Error('No image!')
+    }
+    if (!isValid) {
+      return
     }
     try {
       setIsLoading(true)
@@ -128,16 +149,14 @@ const AddEvent = () => {
 
       const result = await tx.executeWithSigner(signer)
       console.log('result:', result)
-      setIsLoading(false)
       setEventId(_eventId)
-
-      window.location.href = `${window.location.origin}/event/${_eventId}`
+      setShowConfirmation(true)
     } catch (e) {
       console.error(e)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [isValid])
 
   const handleSelectImage = async (files: FileList | null) => {
     if (files) {
@@ -292,6 +311,42 @@ const AddEvent = () => {
           />
         )}
       </Card>
+      <Dialog
+        visible={showConfirmation}
+        showHeader={false}
+        modal={true}
+        closable={false}
+        style={{ width: '50vw' }}
+        onHide={() => setShowConfirmation(false)}
+      >
+        <div className="flex flex-column justify-content-center align-items-center p-4">
+          <div className="text-2xl text-center mb-4">
+            Success, Event created
+          </div>
+          <div className="check-wrapper mb-4">
+            <i
+              className="pi pi-check"
+              style={{ fontSize: '2em', color: '#6166DC' }}
+            ></i>
+          </div>
+          <div className="flex gap-4">
+            <Button
+              label="Create another event"
+              className="p-button-outlined"
+              onClick={() => {
+                resetForm()
+                setShowConfirmation(false)
+              }}
+            />
+            <Button
+              label="Go to claim page"
+              onClick={() => {
+                navigate('/event/' + eventId)
+              }}
+            />
+          </div>
+        </div>
+      </Dialog>
     </div>
   )
 }
