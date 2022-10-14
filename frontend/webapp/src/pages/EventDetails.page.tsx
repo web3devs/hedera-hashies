@@ -35,8 +35,8 @@ const EventDetails = () => {
   const blockMint = useMemo(() => {
     if (collectionId && signer) {
       const now = new Date().getTime()
-      const isAfterDeadline = now > (endDate?.getTime() || 0)
-      const isBeforeStart = now < (fromDate?.getTime() || 0)
+      const isAfterDeadline = !!endDate && now > (endDate?.getTime() || 0)
+      const isBeforeStart = !!fromDate && now < (fromDate?.getTime() || 0)
       const isSecretNotValid = secretCode
         ? secretCode !== inputSecretCode
         : false
@@ -99,8 +99,8 @@ const EventDetails = () => {
       setName(name)
       setURL(url)
       setCreatedAt(new Date(createdAt))
-      setFromDate(new Date(timeLimitFrom))
-      setEndDate(new Date(timeLimitTo))
+      setFromDate(timeLimitFrom && new Date(timeLimitFrom))
+      setEndDate(timeLimitTo && new Date(timeLimitTo))
       setLimit(quantity)
       setSecretCode(secretCode)
 
@@ -175,16 +175,14 @@ const EventDetails = () => {
             </div>
 
             <div className={`col-${url ? '6' : '12'} grid grid-nogutter`}>
-              <div className="text-sm text-left col-12 mt-4">
-                Event description
-              </div>
+              <div className="text-sm text-left col-12 mt-4">Description</div>
               <div className="text-sm text-left text-white col-12 mt-2">
                 {description}
               </div>
             </div>
             {url && (
               <div className="col-6 grid grid-nogutter">
-                <div className="text-sm text-left col-12 mt-4">URL</div>
+                <div className="text-sm text-left col-12 mt-4">Event URL</div>
                 <div className="text-sm text-left text-white col-12 mt-2">
                   <a href={url} target="_blank" rel="noreferrer">
                     {url}
@@ -192,20 +190,27 @@ const EventDetails = () => {
                 </div>
               </div>
             )}
-            <div className="col-12 grid grid-nogutter mt-4">
-              <div className="flex flex-column col-6">
-                <div className="text-sm text-left">Start date</div>
-                <div className="text-sm text-left text-white mt-2">
-                  {fromDate ? fromDate?.toLocaleString() : '-'}
-                </div>
+            {(!!fromDate || !!endDate) && (
+              <div className="col-12 grid grid-nogutter mt-4">
+                {!!fromDate && (
+                  <div className="flex flex-column col-6">
+                    <div className="text-sm text-left">Start date</div>
+                    <div className="text-sm text-left text-white mt-2">
+                      {fromDate.toLocaleString()}
+                    </div>
+                  </div>
+                )}
+
+                {!!endDate && (
+                  <div className="flex flex-column col-6">
+                    <div className="text-sm text-left">End date</div>
+                    <div className="text-sm text-left text-white mt-2">
+                      {endDate.toLocaleString()}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex flex-column col-6">
-                <div className="text-sm text-left">End date</div>
-                <div className="text-sm text-left text-white mt-2">
-                  {endDate ? endDate?.toLocaleString() : '-'}
-                </div>
-              </div>
-            </div>
+            )}
             <div className="col-12 grid grid-nogutter mt-4">
               <div className="flex flex-column col-6">
                 <div className="text-sm text-left">Tokens minted</div>
@@ -214,9 +219,9 @@ const EventDetails = () => {
                 </div>
               </div>
               <div className="flex flex-column col-6">
-                <div className="text-sm text-left">Token limit</div>
+                <div className="text-sm text-left">Minting limit</div>
                 <div className="text-sm text-left text-white mt-2">
-                  {limit || '-'}
+                  {limit || 'unlimited'}
                 </div>
               </div>
             </div>
