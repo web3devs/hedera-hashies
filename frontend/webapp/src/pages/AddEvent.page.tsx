@@ -240,19 +240,19 @@ const AddEvent = () => {
             <div className="flex flex-column flex-grow-1 mr-1">
               <Label className="">Start Date</Label>
               <Calendar
-                dateFormat="dd/mm/yy"
+                dateFormat="mm/dd/yy"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.value as Date)}
-                showTime
+                showTime={false}
               />
             </div>
             <div className="flex flex-column flex-grow-1 ml-1">
-              <Label className="">EndDate Date</Label>
+              <Label className="">End Date</Label>
               <Calendar
-                dateFormat="dd/mm/yy"
+                dateFormat="mm/dd/yy"
+                showTime={false}
                 value={fromDate}
                 onChange={(e) => setToDate(e.value as Date)}
-                showTime
               />
             </div>
           </div>
