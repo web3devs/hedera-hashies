@@ -10,16 +10,40 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 struct HashiesCollection {
     address owner;
     string name;
-    bytes metadataLink;
+    string uri;
     uint256 maxSupply;
-    uint256 nextSerial;
-    int64[] nftSerialMap;
 }
 
 contract Hashies is Initializable, ERC1155Upgradeable, ERC1155BurnableUpgradeable, OwnableUpgradeable, ERC1155SupplyUpgradeable {
-    mapping(string => HashiesCollection) collections;
-    uint256 collectionsCount;
+    mapping(uint256 => HashiesCollection) public collections;
+    uint256 public collectionsCount;
 
+    event CollectionCreated(address owner, uint256 collectionId);
+
+    error OnlyOneAllowedPerAddress(address minter, uint256 collectionId);
+    error UnknownCollection();
+    error EmptyName();
+
+    modifier OnlyOnePerAddress(uint256 collectionId) {
+        if (balanceOf(msg.sender, collectionId) != 0) {
+            revert OnlyOneAllowedPerAddress(msg.sender, collectionId);
+        }
+        _;
+    }
+
+    modifier ExistingCollection(uint256 collectionId) {
+        if (bytes(collections[collectionId].name).length == 0) {
+            revert UnknownCollection();
+        }
+        _;
+    }
+
+    modifier NameNotEmpty(string memory st) {
+        if (bytes(st).length == 0) {
+            revert EmptyName();
+        }
+        _;
+    }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -33,54 +57,34 @@ contract Hashies is Initializable, ERC1155Upgradeable, ERC1155BurnableUpgradeabl
         __ERC1155Supply_init();
     }
 
-//    function createCollection(
-//        string memory id,
-//        string memory name,
-//        string memory metadataLink
-//    ) external {
-//        HashiesCollection memory collection;
-//        collection.owner = msg.sender;
-//        collection.name = name;
-//        collection.metadataLink = bytes(metadataLink);
-//
-//        collections[id] = collection;
-//        collectionsCount += 1;
-//    }
-//
-//
-//    function mint(string memory collectionId) public payable returns (uint256 hashiesSerial, int64 nftSerial) {
-//        HashiesCollection storage hashiesCollection = collections[collectionId];
-//        hashiesSerial = hashiesCollection.nextSerial;
-//        bytes[] memory metadata = new bytes[](1);
-//        metadata[0] = hashiesCollection.metadataLink;
-//
-//        (int response, , int64[] memory nftSerials) = mintToken(htsCollectionId, 0, metadata);
-//        if (response != HederaResponseCodes.SUCCESS) {
-//            revert HTSMintingFailed(collectionId, hashiesSerial, response);
-//        }
-//        nftSerial = nftSerials[0];
-//        nftSerialMap[nftSerial] = hashiesSerial;
-//        //        hashiesCollection.nftSerialMap.push(nftSerial); // TODO
-//        hashiesCollection.nextSerial += 1;
-//        emit HTSMintingSucceeded(collectionId, nftSerial);
-//    }
+    function createCollection(string memory name, string memory uri_) external
+    NameNotEmpty(name)
+    {
+        uint256 collectionId = collectionsCount; // TODO collectionIds should not be predictable
+        HashiesCollection memory collection;
+        collection.owner = msg.sender;
+        collection.name = name;
+        collection.uri = uri_;
 
-//    function mint(address account, uint256 id, uint256 amount, bytes memory data)
-//    public
-//    onlyOwner
-//    {
-//        _mint(account, id, amount, data);
-//    }
+        collections[collectionId] = collection;
+        collectionsCount += 1;
 
-//    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-//    public
-//    onlyOwner
-//    {
-//        _mintBatch(to, ids, amounts, data);
-//    }
+        emit CollectionCreated(msg.sender, collectionId);
+    }
+
+    function mint(uint256 collectionId) public payable
+    OnlyOnePerAddress(collectionId)
+    ExistingCollection(collectionId)
+    {
+        _mint(msg.sender, collectionId, 1, '');
+    }
+
+    // The following override is required by OpenSea and probably other marketplaces
+    function uri(uint256 collectionId) public view virtual override returns (string memory uri_) {
+        uri_ = collections[collectionId].uri;
+    }
 
     // The following functions are overrides required by Solidity.
-
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
     internal
     override(ERC1155Upgradeable, ERC1155SupplyUpgradeable)

@@ -9,8 +9,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./Hashies.sol";
 
 contract TestV2 is Initializable, ERC1155Upgradeable, ERC1155BurnableUpgradeable, OwnableUpgradeable, ERC1155SupplyUpgradeable {
-    mapping(string => HashiesCollection) collections;
-    uint256 collectionsCount;
+    mapping(uint256 => HashiesCollection) public collections;
+    uint256 public collectionsCount;
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
     internal
