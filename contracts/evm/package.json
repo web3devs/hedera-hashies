@@ -4,8 +4,11 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "clean": "rm -rf ./artifacts/ ./cache/",
+    "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy.ts"
+    "deploy": "hardhat run scripts/deploy.ts",
+    "deploy:testnet": "yarn clean && yarn compile && npx hardhat run scripts/deploy.ts --network testnet_aurora"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
