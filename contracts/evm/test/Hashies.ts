@@ -1,18 +1,18 @@
-import { time, loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { expect } from 'chai'
 import { ethers, upgrades } from 'hardhat'
 import { Status } from '@hashgraph/sdk'
-import {executeAndGetEvent} from './helpers'
+import { executeAndGetEvent } from './helpers'
 
 describe('Hashies', function() {
   async function deployFixture() {
-    const [owner, collectionOwner, minter, mallory] = await ethers.getSigners()
+    const [owner, collectionOwner, minter, transferee, mallory] = await ethers.getSigners()
 
     const Hashies = await ethers.getContractFactory('Hashies')
     const hashies = await upgrades.deployProxy(Hashies, [])
 
-    return { hashies, owner, collectionOwner, minter, mallory }
+    return { hashies, owner, collectionOwner, minter, transferee, mallory }
   }
 
   describe('Deployment', function() {
@@ -23,8 +23,8 @@ describe('Hashies', function() {
     it('Should be upgradable', async function() {
       const { hashies } = await loadFixture(deployFixture)
 
-      const HashiesV2 = await ethers.getContractFactory("TestV2");
-      const v2 = await upgrades.upgradeProxy(hashies.address, HashiesV2);
+      const HashiesV2 = await ethers.getContractFactory('TestV2')
+      const v2 = await upgrades.upgradeProxy(hashies.address, HashiesV2)
 
       // TODO check to make sure it worked
     })
@@ -110,5 +110,32 @@ describe('Hashies', function() {
       await expect(hashies.connect(minter).mint(999))
         .to.be.revertedWithCustomError(hashies, 'UnknownCollection')
     })
+  })
+  describe('transfer', () => {
+    const NAME = 'Check this one out'
+    const METADATA_URI = 'ipfs://Wowza'
+
+    let hashies, minter, collectionId, transferee
+
+    beforeEach(async () => {
+      const fixture = await loadFixture(deployFixture)
+      const { collectionOwner } = fixture
+      hashies = fixture.hashies
+      minter = fixture.minter
+      transferee = fixture.transferee
+      collectionId = await hashies.collectionsCount()
+      await hashies.connect(collectionOwner).createCollection(NAME, METADATA_URI)
+      await hashies.connect(minter).mint(collectionId)
+    })
+    it('should allow a token to be transferred', async () => {
+      await expect(
+        await hashies.connect(minter)
+          .safeTransferFrom(minter.address, transferee.address, collectionId, 1, '0x')
+      )
+        .to.emit(hashies, 'TransferSingle')
+        .withArgs(minter.address, minter.address, transferee.address, collectionId, 1)
+
+    })
+
   })
 })
