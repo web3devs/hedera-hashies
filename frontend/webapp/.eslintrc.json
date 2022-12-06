@@ -30,6 +30,7 @@
   },
   "plugins": ["react", "@typescript-eslint","prettier"],
   "rules": {
+    "react/prop-types": "off",
     "prettier/prettier": "error",
     "@typescript-eslint/no-misused-promises": "off",
     "@typescript-eslint/ban-ts-comment": "off"

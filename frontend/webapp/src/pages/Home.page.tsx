@@ -1,17 +1,12 @@
 import { Button } from 'primereact/button'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-// import InfoCard from '../components/home/InfoCard'
-import { useHeaderAccess } from '../context/HederaProvider'
-
+import { useAurora } from '../context/AuroraProvider'
 import './Home.scss'
+
 const Home = () => {
   const navigate = useNavigate()
-  const { isConnected, connect } = useHeaderAccess()
-
-  const handleConnect = async () => {
-    connect()
-  }
+  const { handleConnect, account } = useAurora()
 
   return (
     <div className="home">
@@ -22,7 +17,7 @@ const Home = () => {
       <div className="text mb-4">
         Create events for your communities and prove that they were there.
       </div>
-      {isConnected ? (
+      {account ? (
         <Button
           label="Create an Event"
           className="create-event mb-8"

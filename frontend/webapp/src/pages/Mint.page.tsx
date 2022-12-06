@@ -2,14 +2,10 @@ import React, { useMemo, useState, useCallback } from 'react'
 import Card from '../components/Card'
 import { useParams } from 'react-router-dom'
 import { useHeaderAccess } from '../context/HederaProvider'
-import {
-  ContractExecuteTransaction,
-  ContractFunctionParameters
-} from '@hashgraph/sdk'
-import HashieConfig from '../settings.json'
 
 import './Mint.scss'
 import { Button } from 'primereact'
+import { useAurora } from '../context/AuroraProvider'
 
 enum State {
   INIT = 1,
@@ -78,8 +74,10 @@ const Progress = () => {
 
 const Mint = () => {
   const [state, setState] = useState<State>(State.INIT)
-  const { code: collectionId } = useParams()
+  const { code, collectionId } = useParams()
   const { signer } = useHeaderAccess()
+
+  const { mint } = useAurora()
 
   const handleMint = useCallback(async () => {
     try {
@@ -88,24 +86,7 @@ const Mint = () => {
         return
       }
       setState(State.PROGRESS)
-
-      const accountId = signer?.getAccountId().toSolidityAddress()
-      if (typeof accountId !== 'string') return
-
-      const tx = await new ContractExecuteTransaction()
-        .setContractId(HashieConfig.address)
-        .setFunction(
-          'mint',
-          new ContractFunctionParameters()
-            .addUint256(Number(collectionId))
-            .addAddress(accountId)
-        )
-        .setGas(9000000) // TODO Use a gas calculator
-        .freezeWithSigner(signer)
-
-      const result = await tx.executeWithSigner(signer)
-      console.log(result)
-
+      await mint(collectionId)
       setState(State.SUCCESS)
     } catch {
       setState(State.FAILURE)

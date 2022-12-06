@@ -7,6 +7,7 @@ import React, {
   useState
 } from 'react'
 import HashieConfig from '../settings.json'
+import { useAurora } from './AuroraProvider'
 
 interface HederaProviderProps {
   children: ReactNode
@@ -31,9 +32,11 @@ const Context = createContext<HederaAccessContextType>({
 
 export const HederaAPIProvider = ({ children }: HederaProviderProps) => {
   const [nfts, setNFTs] = useState<[] | null>([])
-
+  const { account, getBalance } = useAurora()
   useEffect(() => {
     ;(async () => {
+      console.log('init')
+      // await getBalance('0x8d2bd8c2B963289674A922447c857D5938C1B05c')
       const nfts = await loadNFTs()
       setNFTs(nfts)
     })()

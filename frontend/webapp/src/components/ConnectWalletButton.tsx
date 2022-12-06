@@ -1,20 +1,14 @@
-import React from 'react'
-import { useHeaderAccess } from '../context/HederaProvider'
+import React, { useEffect } from 'react'
+import { useAurora } from '../context/AuroraProvider'
 import { formatAddress } from '../helpers'
 import './ConnectWalletButton.scss'
-
 const ConnectWalletButton = () => {
-  const { connect, isConnected, accountId, disconnect } = useHeaderAccess()
-  const handleConnect = () => connect()
-  const handleDisconnect = () => {
-    console.log('disconnect')
-    disconnect()
-  }
+  const { account, handleConnect, handleDisconnect } = useAurora()
   return (
     <div
       className="connect-wallet-button"
       onClick={() => {
-        if (!isConnected) {
+        if (!account) {
           handleConnect()
         } else {
           handleDisconnect()
@@ -22,10 +16,10 @@ const ConnectWalletButton = () => {
       }}
     >
       <span className="text-white text-sm">
-        {!isConnected ? 'Connect Wallet' : `${formatAddress(accountId || '')}`}
+        {!account ? 'Connect Wallet' : `${formatAddress(account || '')}`}
       </span>
 
-      {isConnected && <span className="text-sm ml-2">Connected</span>}
+      {account && <span className="text-sm ml-2">Connected</span>}
     </div>
   )
 }

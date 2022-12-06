@@ -1,21 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from 'primereact/button'
 import Card from '../components/Card'
 import Star from '../assets/img-star.svg'
 import './EventDetails.scss'
 import { useParams } from 'react-router-dom'
-import { useHeaderAccess } from '../context/HederaProvider'
 import { useHeaderAPI } from '../context/HederaAPIProvider'
-import {
-  ContractExecuteTransaction,
-  ContractFunctionParameters
-  // Hbar
-} from '@hashgraph/sdk'
-import HashieConfig from '../settings.json'
 import { InputText, Toast } from 'primereact'
+import { useAurora } from '../context/AuroraProvider'
 
 const EventDetails = () => {
-  const { code: collectionId } = useParams()
+  const { code, collectionId } = useParams()
   const toast = useRef<Toast>(null)
   const [loading, isLoading] = useState<boolean>(true)
   const [endDate, setEndDate] = useState<Date | null>(null)
@@ -29,18 +23,17 @@ const EventDetails = () => {
   const [name, setName] = useState<string | null>(null)
   const [image, setImage] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
-  const { signer } = useHeaderAccess()
   const { nfts, getMintedTokens, hasToken } = useHeaderAPI()
-
+  const { mint, account } = useAurora()
   const blockMint = useMemo(() => {
-    if (collectionId && signer) {
+    if (collectionId && account) {
       const now = new Date().getTime()
       const isAfterDeadline = !!endDate && now > (endDate?.getTime() || 0)
       const isBeforeStart = !!fromDate && now < (fromDate?.getTime() || 0)
       const isSecretNotValid = secretCode
         ? secretCode !== inputSecretCode
         : false
-      const hasNFT = hasToken(collectionId, signer?.getAccountId().toString())
+      const hasNFT = hasToken(collectionId, account)
 
       const isOverLimit = limit && mintedNum >= limit
       return (
@@ -60,21 +53,19 @@ const EventDetails = () => {
     secretCode,
     inputSecretCode,
     nfts,
-    collectionId,
-    signer
+    code,
+    account
   ])
 
   useEffect(() => {
     const _fetch = async () => {
       isLoading(true)
-      if (!collectionId) {
+      if (!code) {
         isLoading(false)
         return
       }
 
-      const response = await fetch(
-        `https://ipfs.io/ipfs/${collectionId}/metadata.json`
-      )
+      const response = await fetch(`https://ipfs.io/ipfs/${code}/metadata.json`)
       const data = await response.json()
       console.log(data)
       console.log(window.location.origin)
@@ -106,59 +97,29 @@ const EventDetails = () => {
 
       isLoading(false)
     }
-    if (
-      name === null &&
-      description === null &&
-      image === null &&
-      collectionId
-    ) {
+    if (name === null && description === null && image === null && code) {
       _fetch()
     }
-  }, [collectionId, name, description, image])
+  }, [code, name, description, image])
 
   useEffect(() => {
-    if (collectionId) {
-      const tokensMinted = getMintedTokens(collectionId)
+    if (code) {
+      const tokensMinted = getMintedTokens(code)
       setMintedNum(tokensMinted)
     }
-  }, [collectionId, nfts])
+  }, [code, nfts])
 
-  const handleMint = async () => {
-    if (!collectionId || !signer) {
+  const handleMint = useCallback(async () => {
+    if (!collectionId) {
       return
     }
-    const accountId = signer?.getAccountId().toSolidityAddress()
-    if (typeof accountId !== 'string') return
 
-    console.log('CollectionID: ', collectionId)
-    console.log('AccountID: ', signer?.getAccountId().toString(), accountId)
-
-    try {
-      const tx = await new ContractExecuteTransaction()
-        .setContractId(HashieConfig.address)
-        .setFunction(
-          'mint',
-          new ContractFunctionParameters()
-            .addString(collectionId)
-            .addAddress(accountId)
-        )
-        .setGas(10000000) // TODO Use a gas calculator
-        .freezeWithSigner(signer)
-
-      const result = await tx.executeWithSigner(signer)
-      console.log('result:', result)
-      if (result) {
-        const record = result.getRecordWithSigner(signer)
-        console.log('record:', record)
-      }
-    } catch (e) {
-      console.error(e)
-    }
-  }
+    mint(collectionId)
+  }, [collectionId])
 
   const eventDetailsUrl = useMemo(() => {
-    return `https://hashie.net/event/${collectionId}`
-  }, [collectionId])
+    return `https://hashie.net/event/${code}/${collectionId}`
+  }, [collectionId, code])
 
   return (
     <div className="flex justify-content-center align-items-center">

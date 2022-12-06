@@ -8,18 +8,13 @@ import { RadioButton } from 'primereact/radiobutton'
 import Card from '../components/Card'
 import Label from '../components/Label'
 import SwitchableField from '../components/SwitchableField'
-import { useHeaderAccess } from '../context/HederaProvider'
-import {
-  ContractExecuteTransaction,
-  ContractFunctionParameters
-} from '@hashgraph/sdk'
-import HashieConfig from '../settings.json'
 import { storeNFT, HashieToken } from '../helpers/ipfs'
 
 import './AddEvent.scss'
 import { validate } from 'validate.js'
 import { Dialog } from 'primereact/dialog'
 import { useNavigate } from 'react-router-dom'
+import { useAurora } from '../context/AuroraProvider'
 
 const constraints = {
   eventName: {
@@ -47,10 +42,11 @@ const AddEvent = () => {
   const [secretCode, setSecretCode] = useState<string>('')
   const [url, setUrl] = useState<string | undefined>()
   const [description, setDescription] = useState('')
-  const { isConnected, connect, signer } = useHeaderAccess()
+  const { createCollection, account, handleConnect } = useAurora()
   const [isLoading, setIsLoading] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [eventId, setEventId] = useState<string | null>(null)
+  const [collectionId, setCollectionId] = useState<string | null>()
 
   const fileUploadRef = useRef<HTMLInputElement>(null)
 
@@ -92,15 +88,8 @@ const AddEvent = () => {
     setErrors(err)
   }, [description, eventName, selectedImage, url, isTouched])
 
-  const handleConnect = async () => {
-    connect()
-  }
-
   const handleSubmit = useCallback(async () => {
     setIsTouched(true)
-    if (!signer) {
-      throw new Error('No signer!')
-    }
     if (!selectedImage) {
       throw new Error('No image!')
     }
@@ -110,6 +99,7 @@ const AddEvent = () => {
     try {
       setIsLoading(true)
       const hashie = new HashieToken()
+
       hashie.name = eventName
       hashie.description = description
       hashie.image = selectedImage
@@ -135,28 +125,16 @@ const AddEvent = () => {
       const _eventId = t.ipnft
       console.log('_eventId:', _eventId)
 
-      const tx = await new ContractExecuteTransaction()
-        .setContractId(HashieConfig.address)
-        .setFunction(
-          'createCollection',
-          new ContractFunctionParameters()
-            .addString(_eventId)
-            .addString(eventName)
-            .addString(metadataURL)
-        )
-        .setGas(900000) // TODO Use a gas calculator
-        .freezeWithSigner(signer)
-
-      const result = await tx.executeWithSigner(signer)
-      console.log('result:', result)
+      const collectionId = await createCollection(eventName, metadataURL)
       setEventId(_eventId)
+      setCollectionId(collectionId)
       setShowConfirmation(true)
     } catch (e) {
       console.error(e)
     } finally {
       setIsLoading(false)
     }
-  }, [isValid])
+  }, [isValid, selectedImage])
 
   const handleSelectImage = async (files: FileList | null) => {
     if (files) {
@@ -302,7 +280,7 @@ const AddEvent = () => {
             />
           </div>
         </div>
-        {isConnected ? (
+        {account ? (
           <Button
             label="Create event"
             className="submit mt-4"
@@ -350,7 +328,7 @@ const AddEvent = () => {
             <Button
               label="Go to claim page"
               onClick={() => {
-                navigate('/event/' + eventId)
+                navigate('/event/' + eventId + '/' + collectionId)
               }}
             />
           </div>

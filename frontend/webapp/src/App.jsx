@@ -6,8 +6,8 @@ import HomePage from './pages/Home.page'
 import NavBar from './components/NavBar'
 import ConfirmationPage from './pages/EventDetails.page'
 import MintPage from './pages/Mint.page'
-import { HederaProvider } from './context/HederaProvider'
 import { HederaAPIProvider } from './context/HederaAPIProvider'
+import AuroraProvider from './context/AuroraProvider'
 
 const router = createBrowserRouter([
   {
@@ -19,23 +19,23 @@ const router = createBrowserRouter([
     element: <AddEventPage />
   },
   {
-    path: '/event/:code',
+    path: '/event/:code/:collectionId',
     element: <ConfirmationPage />
   },
   {
-    path: '/mint/:code',
+    path: '/mint/:code/:collectionId',
     element: <MintPage />
   }
 ])
 const App = () => {
   return (
     <div className="App bg">
-      <HederaAPIProvider>
-        <HederaProvider>
+      <AuroraProvider>
+        <HederaAPIProvider>
           <NavBar />
           <RouterProvider router={router} />
-        </HederaProvider>
-      </HederaAPIProvider>
+        </HederaAPIProvider>
+      </AuroraProvider>
     </div>
   )
 }

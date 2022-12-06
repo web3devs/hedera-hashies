@@ -8,7 +8,10 @@ import React, {
 } from 'react'
 import { HashConnectSigner } from 'hashconnect/dist/esm/provider/signer'
 import { HashConnect, MessageTypes } from 'hashconnect'
-import { HashConnectTypes } from 'hashconnect/dist/types'
+import {
+  HashConnectConnectionState,
+  HashConnectTypes
+} from 'hashconnect/dist/types'
 
 export type NetworkStage = 'testnet' | 'mainnet' | 'previewnet'
 
@@ -52,36 +55,6 @@ interface HederaProviderProps {
 
 const hashConnect = new HashConnect(false)
 
-// TODO Begin debugging code
-hashConnect.foundExtensionEvent.on((data) => {
-  console.log('Found extension', data)
-})
-
-hashConnect.pairingEvent.on((data) => {
-  console.log('>>>>>Paired with wallet', data)
-})
-
-hashConnect.connectionStatusChangeEvent.on((state) => {
-  console.log('>>>>>status change event', state)
-})
-
-hashConnect.transactionEvent.on((data: MessageTypes.Transaction) => {
-  console.log('********transaction event', data)
-})
-
-hashConnect.signRequestEvent.on((data: MessageTypes.SigningRequest) => {
-  console.log('>>>>>sign request', data)
-})
-
-hashConnect.authRequestEvent.on((data: MessageTypes.AuthenticationRequest) => {
-  console.log('>>>>>auth request', data)
-})
-
-hashConnect.acknowledgeMessageEvent.on((data: MessageTypes.Acknowledge) => {
-  console.log('>>>>>ack message request', data)
-})
-// End debugging code
-
 export const connect = () => {
   hashConnect.connectToLocalWallet()
 }
@@ -97,8 +70,41 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
   const [accountId, setAccountId] = useState<string | null>(null)
   const [signer, setSigner] = useState<HashConnectSigner | null>(null)
 
+  const [state, setState] = useState({})
+
+  const onFoundExtension = (data: HashConnectTypes.WalletMetadata) => {
+    console.log('Found extension', data)
+    setState((exState) => ({ ...exState, availableExtension: data }))
+  }
+
+  const onParingEvent = (data: MessageTypes.ApprovePairing) => {
+    console.log('Paired with wallet', data)
+    setState((exState) => ({ ...exState, pairingData: data.pairingData }))
+  }
+
+  const onConnectionChange = (state: HashConnectConnectionState) => {
+    console.log('hashconnect state change event', state)
+    setState((exState) => ({ ...exState, state }))
+  }
+
+  useEffect(() => {
+    console.log(state)
+  }, [state])
+  //register events
+  useEffect(() => {
+    hashConnect.foundExtensionEvent.on(onFoundExtension)
+    hashConnect.pairingEvent.on(onParingEvent)
+    hashConnect.connectionStatusChangeEvent.on(onConnectionChange)
+    return () => {
+      hashConnect.foundExtensionEvent.off(onFoundExtension)
+      hashConnect.pairingEvent.on(onParingEvent)
+      hashConnect.connectionStatusChangeEvent.off(onConnectionChange)
+    }
+  }, [])
   useEffect(() => {
     ;(async () => {
+      // setTimeout(async () => {
+
       const initData = await hashConnect.init(
         {
           name: 'Hashie',
@@ -108,15 +114,29 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
         'testnet',
         true
       )
+      const topic = initData.topic
+      const pairingString = initData.pairingString
+      //Saved pairings will return here, generally you will only have one unless you are doing something advanced
+      const pairingData = initData.savedPairings[0]
+
+      setState((exState) => ({
+        ...exState,
+        topic,
+        pairingData,
+        pairingString,
+        state: HashConnectConnectionState.Disconnected
+      }))
+
       setPairingData(initData.savedPairings[0])
-      await hashConnect.connect()
-      const hcProvider = hashConnect.getProvider(
-        'testnet',
-        hashConnect.hcData.topic,
-        hashConnect.hcData.pairingData[0].accountIds[0]
-      )
-      const hcSigner = hashConnect.getSigner(hcProvider)
-      setSigner(hcSigner)
+      // await hashConnect.connect()
+      // const hcProvider = hashConnect.getProvider(
+      //   'testnet',
+      //   hashConnect.hcData.topic,
+      //   hashConnect.hcData.pairingData[0].accountIds[0]
+      // )
+      // const hcSigner = hashConnect.getSigner(hcProvider)
+      // setSigner(hcSigner)
+      // }, 2000)
     })()
   }, [meta])
 
