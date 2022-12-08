@@ -3,6 +3,7 @@ import React, {
   ReactElement,
   useContext,
   useEffect,
+  useCallback,
   useState
 } from 'react'
 import { ethers, BigNumber } from 'ethers'
@@ -26,8 +27,8 @@ const AuroraContext = createContext({
   handleDisconnect: () => {
     //NOOP
   },
-  getBalance: async (address) => {
-    //NOOP
+  getBalance: async (collectionId) => {
+    return 0
   },
   mint: async (collectionId) => {
     //NOOP
@@ -50,7 +51,6 @@ const AuroraProvider = ({ children }) => {
 
   useEffect(() => {
     registerCallback('auth', async () => {
-      console.log('callback')
       const addres = getAccountAddress()
 
       if (addres) {
@@ -105,20 +105,16 @@ const AuroraProvider = ({ children }) => {
     console.log(res)
   }
 
-  useEffect(() => {
-    ;(async () => {
-      if (provider) {
-        console.log(provider)
-        const a = await provider.getBalance(CONTRACT_ADDRESS)
-        console.log('balance', BigNumber.from(a))
+  const getBalance = useCallback(
+    async (id) => {
+      if (!contract || !account) {
+        return
       }
-    })()
-  }, [provider])
-
-  const getBalance = async (address) => {
-    const a = await provider.getBalance(address)
-    console.log('balance', BigNumber.from(a))
-  }
+      const a = await contract.balanceOf(account, id)
+      return BigNumber.from(a).toNumber()
+    },
+    [contract, account]
+  )
   return (
     <AuroraContext.Provider
       value={{

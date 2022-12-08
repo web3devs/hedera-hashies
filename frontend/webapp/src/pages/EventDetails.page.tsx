@@ -24,7 +24,15 @@ const EventDetails = () => {
   const [image, setImage] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
   const { nfts, getMintedTokens, hasToken } = useHeaderAPI()
-  const { mint, account } = useAurora()
+  const { mint, account, getBalance } = useAurora()
+  const [hasNFT, setHasNFT] = useState(false)
+  useEffect(() => {
+    ;(async () => {
+      const num = await getBalance(collectionId)
+      console.log(num)
+      setHasNFT(num > 0)
+    })()
+  }, [collectionId, account])
   const blockMint = useMemo(() => {
     if (collectionId && account) {
       const now = new Date().getTime()
@@ -33,7 +41,6 @@ const EventDetails = () => {
       const isSecretNotValid = secretCode
         ? secretCode !== inputSecretCode
         : false
-      const hasNFT = hasToken(collectionId, account)
 
       const isOverLimit = limit && mintedNum >= limit
       return (
@@ -46,6 +53,7 @@ const EventDetails = () => {
     }
     return true
   }, [
+    hasNFT,
     limit,
     mintedNum,
     fromDate,
@@ -208,13 +216,14 @@ const EventDetails = () => {
                 />
               </>
             )}
-            <div className="col-12 mb-4 flex flex-column align-items-center">
+            <div className="col-12 mb-2 flex flex-column align-items-center">
               <Button
                 label="Mint Hashie!"
                 className="submit mt-4 pr-4 pl-4"
                 onClick={handleMint}
                 disabled={blockMint}
               />
+              {hasNFT && <div className="mt-2">You already own this token</div>}
             </div>
             <div className="col-12 text-xs">
               <div className="flex justify-content-center align-items-center">

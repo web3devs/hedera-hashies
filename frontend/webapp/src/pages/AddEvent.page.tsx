@@ -264,7 +264,7 @@ const AddEvent = () => {
               <Calendar
                 dateFormat="mm/dd/yy"
                 showTime={false}
-                value={fromDate}
+                value={toDate}
                 onChange={(e) => setToDate(e.value as Date)}
               />
             </div>
@@ -338,7 +338,7 @@ const AddEvent = () => {
         showHeader={false}
         modal={true}
         closable={false}
-        style={{ width: '50vw' }}
+        style={{ width: '30rem' }}
         onHide={() => setShowConfirmation(false)}
       >
         <div className="flex flex-column justify-content-center align-items-center p-4">
