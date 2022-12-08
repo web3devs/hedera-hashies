@@ -2,7 +2,6 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { expect } from 'chai'
 import { ethers, upgrades } from 'hardhat'
-import { Status } from '@hashgraph/sdk'
 import { executeAndGetEvent } from './helpers'
 
 describe('Hashies', function() {
@@ -138,4 +137,42 @@ describe('Hashies', function() {
     })
 
   })
+  describe('enumerableByOwner', () => {
+    const NAME1 = 'Oye cómo va'
+    const METADATA_URI1 = 'ipfs://MiRitmo'
+    const NAME2 = 'Bueno pa\' gozar'
+    const METADATA_URI2 = 'ipfs://Mulata'
+
+    let hashies, minter, collection1Id, collection2Id, transferee
+
+    beforeEach(async () => {
+      const fixture = await loadFixture(deployFixture)
+      const { collectionOwner } = fixture
+      hashies = fixture.hashies
+      minter = fixture.minter
+      transferee = fixture.transferee
+      const tx1 = await hashies.connect(collectionOwner).createCollection(NAME1, METADATA_URI1)
+      collection1Id = getCollectionId(await tx1.wait())
+      const tx2 = await hashies.connect(collectionOwner).createCollection(NAME2, METADATA_URI2)
+      collection2Id = getCollectionId(await tx2.wait())
+    })
+    it('should return empty array when user has no hashies', async () => {
+      expect(await hashies.ownedTokens(minter.address)).to.eql([])
+    })
+    it('should return an array containing the id of the hashie owned by a user', async () => {
+      await hashies.connect(minter).mint(collection1Id)
+      expect(await hashies.ownedTokens(minter.address)).to.eql([collection1Id])
+    })
+    it('should return an array containing the id of all hashies owned by a user', async () => {
+      await hashies.connect(minter).mint(collection1Id)
+      await hashies.connect(minter).mint(collection2Id)
+      expect(await hashies.ownedTokens(minter.address)).to.eql([collection1Id, collection2Id])
+    })
+  })
 })
+
+function getCollectionId(collectionRx: any) {
+  const event = collectionRx.events.findIndex(ev => ev.event === 'CollectionCreated')
+  const collectionId = collectionRx.events[event].args[1]
+  return collectionId
+}
