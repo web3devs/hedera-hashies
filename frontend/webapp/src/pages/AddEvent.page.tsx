@@ -15,6 +15,7 @@ import { validate } from 'validate.js'
 import { Dialog } from 'primereact/dialog'
 import { useNavigate } from 'react-router-dom'
 import { useAurora } from '../context/AuroraProvider'
+import { Image } from 'primereact'
 
 const constraints = {
   eventName: {
@@ -140,8 +141,17 @@ const AddEvent = () => {
     if (files) {
       console.log(files[0])
       setSelectedImage(files[0])
+    } else {
+      setSelectedImage(null)
     }
   }
+
+  const imageData = useMemo(() => {
+    if (!selectedImage) {
+      return null
+    }
+    return URL.createObjectURL(selectedImage)
+  }, [selectedImage])
 
   return (
     <div className="flex flex-column justify-content-center align-items-center h-full">
@@ -156,12 +166,37 @@ const AddEvent = () => {
           {errors?.eventName}
         </small>
         <Label className="">Select on Image *</Label>
-        <div className="flex flex-start gap-2 mb-2">
+        <div className="flex gap-2 mb-2 align-items-center">
+          {imageData && (
+            <Image
+              src={imageData}
+              className="justify-self-start"
+              alt="image-previev"
+              width="64"
+              height="64"
+            />
+          )}
+          {selectedImage && (
+            <span className="text-xs justify-self-start ml-2">
+              {selectedImage.name}
+            </span>
+          )}
+
+          {selectedImage && (
+            <Button
+              icon="pi pi-times"
+              className="p-button-rounded p-button-outlined mr-4"
+              aria-label="Cancel"
+              onClick={() => {
+                handleSelectImage(null)
+              }}
+            />
+          )}
           <Button
             onClick={() => {
               fileUploadRef?.current?.click()
             }}
-            className="p-button-outlined"
+            className="p-button-outlined justify-self-start"
           >
             Select an Image
           </Button>

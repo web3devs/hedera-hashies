@@ -5,7 +5,7 @@ import Star from '../assets/img-star.svg'
 import './EventDetails.scss'
 import { useParams } from 'react-router-dom'
 import { useHeaderAPI } from '../context/HederaAPIProvider'
-import { InputText, Toast } from 'primereact'
+import { Image, InputText, Toast } from 'primereact'
 import { useAurora } from '../context/AuroraProvider'
 
 const EventDetails = () => {
@@ -123,13 +123,25 @@ const EventDetails = () => {
 
   return (
     <div className="flex justify-content-center align-items-center">
-      <Card className="w-7 grid grid-nogutter">
+      <Card className="grid grid-nogutter xl:xl:w-4 lg:w-6 md:w-7 sm:w-full">
         {!loading ? (
           <>
             {image ? (
-              <img src={image} alt="Event image" className="col-3" />
+              <Image
+                src={image}
+                alt="Event image"
+                className="col-3"
+                width="120"
+                height="120"
+                preview
+              />
             ) : (
-              <img src={Star} alt="Placeholder image" className="col-3" />
+              <Image
+                src={Star}
+                alt="Placeholder image"
+                className="col-3"
+                preview
+              />
             )}
             <div className="text-lg text-left text-white col-9 pl-4">
               <h2 className="mt-0">{name}</h2>
