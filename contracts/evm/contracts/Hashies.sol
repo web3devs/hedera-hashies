@@ -26,6 +26,7 @@ ERC1155EnumerableByOwnerUpgradeable {
     error OnlyOneAllowedPerAddress(address minter, uint256 collectionId);
     error UnknownCollection();
     error EmptyName();
+    error MintLimitReached();
 
     modifier OnlyOnePerAddress(uint256 collectionId) {
         if (balanceOf(msg.sender, collectionId) != 0) {
@@ -48,6 +49,14 @@ ERC1155EnumerableByOwnerUpgradeable {
         _;
     }
 
+    modifier SupplyAvailable(uint256 collectionId) {
+        uint256 maxSupply = collections[collectionId].maxSupply;
+        if (maxSupply != 0 && totalSupply(collectionId) >= maxSupply) {
+            revert MintLimitReached();
+        }
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -60,7 +69,7 @@ ERC1155EnumerableByOwnerUpgradeable {
         __ERC1155Supply_init();
     }
 
-    function createCollection(string memory name, string memory uri_) external
+    function createCollection(string memory name, string memory uri_, uint256 maxSupply) external
     NameNotEmpty(name)
     {
         uint256 collectionId = collectionsCount; // TODO collectionIds should not be predictable
@@ -68,6 +77,7 @@ ERC1155EnumerableByOwnerUpgradeable {
         collection.owner = msg.sender;
         collection.name = name;
         collection.uri = uri_;
+        collection.maxSupply = maxSupply;
 
         collections[collectionId] = collection;
         collectionsCount += 1;
@@ -78,6 +88,7 @@ ERC1155EnumerableByOwnerUpgradeable {
     function mint(uint256 collectionId) public payable
     OnlyOnePerAddress(collectionId)
     ExistingCollection(collectionId)
+    SupplyAvailable(collectionId)
     {
         _mint(msg.sender, collectionId, 1, '');
     }
