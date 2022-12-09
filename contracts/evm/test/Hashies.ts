@@ -54,7 +54,7 @@ describe('Hashies', function() {
 
       const startCollectionsCount = await hashies.collectionsCount()
       const collectionId = await hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, 0, 0)
+        .createCollection(NAME, METADATA_URI, 0, 0, 0, 0)
 
       // Check the collection count
       const collectionsCount = await hashies.collectionsCount()
@@ -70,7 +70,7 @@ describe('Hashies', function() {
       const { hashies, collectionOwner } = await loadFixture(deployFixture)
       await expect(
         await hashies.connect(collectionOwner)
-          .createCollection(NAME, METADATA_URI, 0, 0, 0)
+          .createCollection(NAME, METADATA_URI, 0, 0, 0, 0)
       ).to.emit(hashies, 'CollectionCreated')
         .withArgs(collectionOwner.address, anyValue)
 
@@ -79,7 +79,7 @@ describe('Hashies', function() {
       const { hashies, collectionOwner } = await loadFixture(deployFixture)
       const collectionCreatedEvent = await executeAndGetEvent(
         await hashies.connect(collectionOwner)
-          .createCollection(NAME, METADATA_URI, 0, 0, 0),
+          .createCollection(NAME, METADATA_URI, 0, 0, 0, 0),
         'CollectionCreated'
       )
       const collectionId = collectionCreatedEvent.collectionId
@@ -88,7 +88,8 @@ describe('Hashies', function() {
     it('should reject empty collection names', async () => {
       const { hashies, collectionOwner } = await loadFixture(deployFixture)
       await expect(
-        hashies.connect(collectionOwner).createCollection('', METADATA_URI, 0, 0, 0)
+        hashies.connect(collectionOwner)
+          .createCollection('', METADATA_URI, 0, 0, 0, 0)
       ).to.be.revertedWithCustomError(hashies, 'EmptyName')
     })
   })
@@ -104,7 +105,8 @@ describe('Hashies', function() {
       hashies = fixture.hashies
       minter = fixture.minter
       collectionId = await hashies.collectionsCount()
-      await hashies.connect(collectionOwner).createCollection(NAME, METADATA_URI, 0, 0, 0)
+      await hashies.connect(collectionOwner)
+        .createCollection(NAME, METADATA_URI, 0, 0, 0, 0)
     })
     it('should mint an NFT', async () => {
       // await expect(
@@ -125,6 +127,40 @@ describe('Hashies', function() {
         .to.be.revertedWithCustomError(hashies, 'UnknownCollection')
     })
   })
+  describe('Minting payment', () => {
+    const NAME = 'Check this one out'
+    const METADATA_URI = 'ipfs://Wowza'
+
+    let hashies, minter, collectionOwner, collectionId
+
+    beforeEach(async () => {
+      const fixture = await loadFixture(deployFixture)
+      hashies = fixture.hashies
+      collectionOwner = fixture.collectionOwner
+      minter = fixture.minter
+      collectionId = await hashies.collectionsCount()
+      await hashies.connect(collectionOwner)
+        .createCollection(NAME, METADATA_URI, 0, 0, 0, 1000)
+    })
+    it('should a mint a token when sufficient payment is sent', async () => {
+      await expect(
+        () => hashies.connect(minter).mint(collectionId, {value: 1000})
+      )
+        .to.changeEtherBalances(
+          [minter.address, collectionOwner.address],
+        [-1000, 1000])
+    })
+    it('should reject a mint request with no payment', async () => {
+      await expect(hashies.connect(minter).mint(collectionId))
+        .to.revertedWithCustomError(hashies, 'InsufficientPayment')
+        .withArgs(1_000, 0)
+    })
+    it('should reject a mint request with a payment that is too low', async () => {
+      await expect(hashies.connect(minter).mint(collectionId, {value: 500}))
+        .to.revertedWithCustomError(hashies, 'InsufficientPayment')
+        .withArgs(1_000, 500)
+    })
+  })
   describe('Supply limit', () => {
     const NAME = 'Check this one out'
     const METADATA_URI = 'ipfs://Wowza'
@@ -140,14 +176,14 @@ describe('Hashies', function() {
     })
     it('should allow unlimited minting when maxSupply is zero', async () => {
       const tx = await hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, 0, 0)
+        .createCollection(NAME, METADATA_URI, 0, 0, 0, 0)
       const collectionId = getCollectionId(await tx.wait())
       await hashies.connect(minter).mint(collectionId)
       await hashies.connect(minter2).mint(collectionId)
     })
     it('should limit minting when maxSupply is not zero', async () => {
       const tx = await hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 1, 0, 0)
+        .createCollection(NAME, METADATA_URI, 1, 0, 0, 0)
       const collectionId = getCollectionId(await tx.wait())
       await hashies.connect(minter).mint(collectionId)
       await expect(hashies.connect(minter2).mint(collectionId)).to.be
@@ -169,26 +205,26 @@ describe('Hashies', function() {
     it('should reject collection creation with timestamps out of order', async () => {
       const now = Math.floor(new Date().getTime() / 1000)
       await expect(hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, now + 3600, now + 600))
+        .createCollection(NAME, METADATA_URI, 0, now + 3600, now + 600, 0))
         .to.revertedWithCustomError(hashies, 'TimestampsOutOfOrder')
     })
     it('should reject contract creation when the end time is before now', async () => {
       const now = Math.floor(new Date().getTime() / 1000)
       await expect(hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, 0, now - 3600))
+        .createCollection(NAME, METADATA_URI, 0, 0, now - 3600, 0))
         .to.revertedWithCustomError(hashies, 'EndingTimestampTooEarly')
     })
     it('should allow minting when within the time limit', async () => {
       const now = Math.floor(new Date().getTime() / 1000)
       const tx = await hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, now - 3600, now + 3600)
+        .createCollection(NAME, METADATA_URI, 0, now - 3600, now + 3600, 0)
       const collectionId = getCollectionId(await tx.wait())
       await hashies.connect(minter).mint(collectionId)
     })
     it('should reject minting when before the start time', async () => {
       const now = Math.floor(new Date().getTime() / 1000)
       const tx = await hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, now + 3600, 0)
+        .createCollection(NAME, METADATA_URI, 0, now + 3600, 0, 0)
       const collectionId = getCollectionId(await tx.wait())
       await expect(hashies.connect(minter).mint(collectionId)).to
         .revertedWithCustomError(hashies, 'OutsideOfMintingTimeRange')
@@ -196,7 +232,7 @@ describe('Hashies', function() {
     it('should reject minting when after the end time', async () => {
       const now = Math.floor(new Date().getTime() / 1000)
       const tx = await hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, 0, now + 2)
+        .createCollection(NAME, METADATA_URI, 0, 0, now + 2, 0)
       await sleep(3)
       const collectionId = getCollectionId(await tx.wait())
       await expect(hashies.connect(minter).mint(collectionId)).to
@@ -216,7 +252,8 @@ describe('Hashies', function() {
       minter = fixture.minter
       transferee = fixture.transferee
       collectionId = await hashies.collectionsCount()
-      await hashies.connect(collectionOwner).createCollection(NAME, METADATA_URI, 0, 0, 0)
+      await hashies.connect(collectionOwner)
+        .createCollection(NAME, METADATA_URI, 0, 0, 0, 0)
       await hashies.connect(minter).mint(collectionId)
     })
     it('should allow a token to be transferred', async () => {
@@ -244,9 +281,11 @@ describe('Hashies', function() {
       hashies = fixture.hashies
       minter = fixture.minter
       transferee = fixture.transferee
-      const tx1 = await hashies.connect(collectionOwner).createCollection(NAME1, METADATA_URI1, 0, 0, 0)
+      const tx1 = await hashies.connect(collectionOwner)
+        .createCollection(NAME1, METADATA_URI1, 0, 0, 0, 0)
       collection1Id = getCollectionId(await tx1.wait())
-      const tx2 = await hashies.connect(collectionOwner).createCollection(NAME2, METADATA_URI2, 0, 0, 0)
+      const tx2 = await hashies.connect(collectionOwner)
+        .createCollection(NAME2, METADATA_URI2, 0, 0, 0, 0)
       collection2Id = getCollectionId(await tx2.wait())
     })
     it('should return empty array when user has no hashies', async () => {

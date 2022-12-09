@@ -15,6 +15,7 @@ struct HashiesCollection {
     uint256 maxSupply;
     uint256 earliestMintTimestamp;
     uint256 latestMintTimestamp;
+    uint256 requiredPayment;
 }
 
 contract Hashies is
@@ -32,6 +33,7 @@ ERC1155EnumerableByOwnerUpgradeable {
     error TimestampsOutOfOrder();
     error OutsideOfMintingTimeRange();
     error EndingTimestampTooEarly();
+    error InsufficientPayment(uint256 expected, uint256 received);
 
     modifier OnlyOnePerAddress(uint256 collectionId) {
         if (balanceOf(msg.sender, collectionId) != 0) {
@@ -92,6 +94,14 @@ ERC1155EnumerableByOwnerUpgradeable {
         _;
     }
 
+    modifier HasSufficientPayment(uint collectionId) {
+        uint256 requiredPayment = collections[collectionId].requiredPayment;
+        if (requiredPayment != 0 && msg.value < requiredPayment) {
+            revert InsufficientPayment(requiredPayment, msg.value);
+        }
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -109,7 +119,8 @@ ERC1155EnumerableByOwnerUpgradeable {
         string memory uri_,
         uint256 maxSupply,
         uint256 earliestMintTimestamp,
-        uint256 latestMintTimestamp
+        uint256 latestMintTimestamp,
+        uint256 requiredPayment
     ) external
     NameNotEmpty(name)
     NowIsBeforeLatestTimestamp(latestMintTimestamp)
@@ -123,6 +134,7 @@ ERC1155EnumerableByOwnerUpgradeable {
         collection.maxSupply = maxSupply;
         collection.earliestMintTimestamp = earliestMintTimestamp;
         collection.latestMintTimestamp = latestMintTimestamp;
+        collection.requiredPayment = requiredPayment;
 
         collections[collectionId] = collection;
         collectionsCount += 1;
@@ -136,7 +148,13 @@ ERC1155EnumerableByOwnerUpgradeable {
     SupplyAvailable(collectionId)
     AfterEarliestTime(collectionId)
     BeforeLatestTime(collectionId)
+    HasSufficientPayment(collectionId)
     {
+        // TODO Set up a ClaimableWallet for incoming payments instead of sending directly
+        if (msg.value != 0) {
+            address payable payee = payable(collections[collectionId].owner);
+            payee.transfer(msg.value);
+        }
         _mint(msg.sender, collectionId, 1, '');
     }
 
