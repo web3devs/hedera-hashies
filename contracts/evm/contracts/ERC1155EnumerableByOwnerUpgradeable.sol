@@ -36,7 +36,7 @@ abstract contract ERC1155EnumerableByOwnerUpgradeable is Initializable, ERC1155U
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
         for (uint256 i = 0; i < ids.length; ++i) {
-            if (from != address(0)) {
+            if (from != address(0) && balanceOf(from, ids[i]) <= amounts[i]) {
                 EnumerableSetUpgradeable.remove(_tokensByOwner[from], ids[i]);
             }
             if (to != address(0)) {
