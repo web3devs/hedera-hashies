@@ -13,6 +13,8 @@ struct HashiesCollection {
     string name;
     string uri;
     uint256 maxSupply;
+    uint256 earliestMintTimestamp;
+    uint256 latestMintTimestamp;
 }
 
 contract Hashies is
@@ -27,6 +29,8 @@ ERC1155EnumerableByOwnerUpgradeable {
     error UnknownCollection();
     error EmptyName();
     error MintLimitReached();
+    error TimestampsOutOfOrder();
+    error OutsideOfMintingTimeRange();
 
     modifier OnlyOnePerAddress(uint256 collectionId) {
         if (balanceOf(msg.sender, collectionId) != 0) {
@@ -57,6 +61,29 @@ ERC1155EnumerableByOwnerUpgradeable {
         _;
     }
 
+    modifier EarlyTimestampBeforeLatestTimestamp(uint256 earliest, uint256 latest) {
+        if (earliest != 0 && latest != 0 && earliest > latest) {
+            revert TimestampsOutOfOrder();
+        }
+        _;
+    }
+
+    modifier AfterEarliestTime(uint256 collectionId) {
+        uint256 timestamp = collections[collectionId].earliestMintTimestamp;
+        if (timestamp != 0 && timestamp > block.timestamp) {
+            revert OutsideOfMintingTimeRange();
+        }
+        _;
+    }
+
+    modifier BeforeLatestTime(uint256 collectionId) {
+        uint256 timestamp = collections[collectionId].latestMintTimestamp;
+        if (timestamp != 0 && timestamp < block.timestamp) {
+            revert OutsideOfMintingTimeRange();
+        }
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -69,8 +96,15 @@ ERC1155EnumerableByOwnerUpgradeable {
         __ERC1155Supply_init();
     }
 
-    function createCollection(string memory name, string memory uri_, uint256 maxSupply) external
+    function createCollection(
+        string memory name,
+        string memory uri_,
+        uint256 maxSupply,
+        uint256 earliestMintTimestamp,
+        uint256 latestMintTimestamp
+    ) external
     NameNotEmpty(name)
+    EarlyTimestampBeforeLatestTimestamp(earliestMintTimestamp, latestMintTimestamp)
     {
         uint256 collectionId = collectionsCount; // TODO collectionIds should not be predictable
         HashiesCollection memory collection;
@@ -78,6 +112,8 @@ ERC1155EnumerableByOwnerUpgradeable {
         collection.name = name;
         collection.uri = uri_;
         collection.maxSupply = maxSupply;
+        collection.earliestMintTimestamp = earliestMintTimestamp;
+        collection.latestMintTimestamp = latestMintTimestamp;
 
         collections[collectionId] = collection;
         collectionsCount += 1;
@@ -89,6 +125,8 @@ ERC1155EnumerableByOwnerUpgradeable {
     OnlyOnePerAddress(collectionId)
     ExistingCollection(collectionId)
     SupplyAvailable(collectionId)
+    AfterEarliestTime(collectionId)
+    BeforeLatestTime(collectionId)
     {
         _mint(msg.sender, collectionId, 1, '');
     }
