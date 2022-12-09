@@ -25,6 +25,7 @@ ERC1155EnumerableByOwnerUpgradeable {
     uint256 public collectionsCount;
 
     event CollectionCreated(address owner, uint256 collectionId);
+    event PaymentReceived(uint256 collectionId, address payee, uint256 amount);
 
     error OnlyOneAllowedPerAddress(address minter, uint256 collectionId);
     error UnknownCollection();
@@ -154,6 +155,7 @@ ERC1155EnumerableByOwnerUpgradeable {
         if (msg.value != 0) {
             address payable payee = payable(collections[collectionId].owner);
             payee.transfer(msg.value);
+            emit PaymentReceived(collectionId, payee, msg.value);
         }
         _mint(msg.sender, collectionId, 1, '');
     }

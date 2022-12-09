@@ -150,6 +150,11 @@ describe('Hashies', function() {
           [minter.address, collectionOwner.address],
         [-1000, 1000])
     })
+    it('should emit a PaymentReceived event', async () => {
+      await expect(hashies.connect(minter).mint(collectionId, {value: 1000}))
+        .to.emit(hashies, 'PaymentReceived')
+        .withArgs(collectionId, collectionOwner.address, 1000)
+    })
     it('should reject a mint request with no payment', async () => {
       await expect(hashies.connect(minter).mint(collectionId))
         .to.revertedWithCustomError(hashies, 'InsufficientPayment')
