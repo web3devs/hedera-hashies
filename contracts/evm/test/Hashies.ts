@@ -27,6 +27,10 @@ describe('Hashies', function() {
     return collectionId
   }
 
+  function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time * 1000));
+  }
+
   describe('Deployment', function() {
     it('Should set the right owner', async function() {
       const { hashies, owner } = await loadFixture(deployFixture)
@@ -165,8 +169,14 @@ describe('Hashies', function() {
     it('should reject collection creation with timestamps out of order', async () => {
       const now = Math.floor(new Date().getTime() / 1000)
       await expect(hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, now + 3600, now - 3600))
+        .createCollection(NAME, METADATA_URI, 0, now + 3600, now + 600))
         .to.revertedWithCustomError(hashies, 'TimestampsOutOfOrder')
+    })
+    it('should reject contract creation when the end time is before now', async () => {
+      const now = Math.floor(new Date().getTime() / 1000)
+      await expect(hashies.connect(collectionOwner)
+        .createCollection(NAME, METADATA_URI, 0, 0, now - 3600))
+        .to.revertedWithCustomError(hashies, 'EndingTimestampTooEarly')
     })
     it('should allow minting when within the time limit', async () => {
       const now = Math.floor(new Date().getTime() / 1000)
@@ -186,7 +196,8 @@ describe('Hashies', function() {
     it('should reject minting when after the end time', async () => {
       const now = Math.floor(new Date().getTime() / 1000)
       const tx = await hashies.connect(collectionOwner)
-        .createCollection(NAME, METADATA_URI, 0, 0, now - 3600)
+        .createCollection(NAME, METADATA_URI, 0, 0, now + 2)
+      await sleep(3)
       const collectionId = getCollectionId(await tx.wait())
       await expect(hashies.connect(minter).mint(collectionId)).to
         .revertedWithCustomError(hashies, 'OutsideOfMintingTimeRange')

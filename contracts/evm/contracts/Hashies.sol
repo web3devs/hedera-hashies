@@ -31,6 +31,7 @@ ERC1155EnumerableByOwnerUpgradeable {
     error MintLimitReached();
     error TimestampsOutOfOrder();
     error OutsideOfMintingTimeRange();
+    error EndingTimestampTooEarly();
 
     modifier OnlyOnePerAddress(uint256 collectionId) {
         if (balanceOf(msg.sender, collectionId) != 0) {
@@ -57,6 +58,13 @@ ERC1155EnumerableByOwnerUpgradeable {
         uint256 maxSupply = collections[collectionId].maxSupply;
         if (maxSupply != 0 && totalSupply(collectionId) >= maxSupply) {
             revert MintLimitReached();
+        }
+        _;
+    }
+
+    modifier NowIsBeforeLatestTimestamp(uint256 latest) {
+        if (latest != 0 && latest < block.timestamp) {
+            revert EndingTimestampTooEarly();
         }
         _;
     }
@@ -104,6 +112,7 @@ ERC1155EnumerableByOwnerUpgradeable {
         uint256 latestMintTimestamp
     ) external
     NameNotEmpty(name)
+    NowIsBeforeLatestTimestamp(latestMintTimestamp)
     EarlyTimestampBeforeLatestTimestamp(earliestMintTimestamp, latestMintTimestamp)
     {
         uint256 collectionId = collectionsCount; // TODO collectionIds should not be predictable
