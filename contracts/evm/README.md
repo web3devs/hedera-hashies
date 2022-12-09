@@ -4,8 +4,11 @@
 The EVM version of the contract is deployed as an upgradable proxy where calls to the proxy are forwarded to the contract with the actual implementation. Use the proxy address to call the contract. The implementation address is provided for reference only.
 
 ### Aurora Testnet
-- Proxy: [0x8d2bd8c2B963289674A922447c857D5938C1B05c](https://testnet.aurorascan.dev/address/0x8d2bd8c2b963289674a922447c857d5938c1b05c)
-- Implementation: [0x5F6f86cf640A30996D60D21433Af247C8870d305](https://testnet.aurorascan.dev/address/0x5f6f86cf640a30996d60d21433af247c8870d305)
+- Proxy: [0x464e97B5E2598D2CCEb1d186B35ACe2363fD11cb](https://testnet.aurorascan.dev/address/0x464e97B5E2598D2CCEb1d186B35ACe2363fD11cb)
+- Implementation: [0x2C0f80c4ec1C0b310d074Cd0557628364E783248](https://testnet.aurorascan.dev/address/0x2C0f80c4ec1C0b310d074Cd0557628364E783248)
+
+### OOPS Also deployed to mainnet
+Address: [0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0](https://aurorascan.dev/address/0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0)
 
 ## What is a Hashie?
 Hashies are easy-to-issue NFTs to mark participation in an event, similar to POAPs on the Ethereum network. According to the [orignal POAP site](https://poap.xyz/):
