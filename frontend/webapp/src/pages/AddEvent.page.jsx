@@ -44,7 +44,7 @@ const schema = object({
         .moreThan(0, 'Must be greater than 0')
     }
   }),
-  url: string().url('Must be a valid url').required('URL is required'),
+  url: string().url('Must be a valid url'),
   paymentOption: string(),
   fee: number().when('paymentOption', {
     is: (val) => {
@@ -55,6 +55,14 @@ const schema = object({
         .typeError("Fee is required when 'Paid' is selected")
         .moreThan(0, 'Must be greater than 0')
         .required("Fee is required when 'Paid' is selected")
+    }
+  }),
+  feeAddress: string().when('paymentOption', {
+    is: (val) => {
+      return val === 'Paid'
+    },
+    then: (schema) => {
+      return schema.required('Recipient address is required')
     }
   })
 })
@@ -72,7 +80,8 @@ const DEFAULT_FORM = {
   secretCode: '',
   url: '',
   isLimitedQuantityEnabled: false,
-  fee: 0
+  fee: 0,
+  feeAddress: ''
 }
 
 const AddEvent = () => {
@@ -110,7 +119,6 @@ const AddEvent = () => {
       setErrors({})
       return
     }
-
     try {
       const e = schema.validateSync(form, { abortEarly: false })
       setErrors({})
@@ -168,7 +176,14 @@ const AddEvent = () => {
       const _eventId = t.ipnft
       console.log('_eventId:', _eventId)
 
-      const collectionId = await createCollection(form.eventName, metadataURL)
+      const collectionId = await createCollection(
+        form.eventName,
+        metadataURL,
+        form.isQuantityEnabled ? form.quantity : 0,
+        form.fromDate ? Math.floor(form.fromDate.getTime() / 1000) : 0,
+        form.toDate ? Math.floor(form.toDate.getTime() / 1000) : 0,
+        form.paymentOption === 'Paid' ? form.fee : 0
+      )
       setEventId(_eventId)
       setCollectionId(collectionId)
       setShowConfirmation(true)
@@ -178,14 +193,6 @@ const AddEvent = () => {
       setIsLoading(false)
     }
   }, [isValid, form])
-
-  useEffect(() => {
-    if (form.paymentOption === 'Paid') {
-      setFormField('quantity', 0)
-    } else {
-      setFormField('quantity', null)
-    }
-  }, [form.paymentOption])
 
   const handleSelectImage = async (files) => {
     if (files) {
@@ -396,13 +403,24 @@ const AddEvent = () => {
             <>
               <InputNumber
                 className="w-50 align-self-start w-full fee-input"
-                value={form.quantity || 0}
+                value={form.fee || 0}
                 onChange={(e) => {
                   setFormField('fee', e.value)
                 }}
               />
               <small className="p-error block text-xs text-left mb-4">
                 {errors?.fee}
+              </small>
+              <div className="text-xs text-left">Recipient address</div>
+              <InputText
+                className="w-50 align-self-start w-full fee-address-input"
+                value={form.feeAddress || ''}
+                onChange={(e) => {
+                  setFormField('feeAddress', e.target.value || '')
+                }}
+              />
+              <small className="p-error block text-xs text-left mb-4">
+                {errors?.feeAddress}
               </small>
             </>
           )}

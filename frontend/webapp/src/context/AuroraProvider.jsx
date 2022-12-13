@@ -18,7 +18,7 @@ import {
   getSigner
 } from '../contracts/metamask'
 
-const CONTRACT_ADDRESS = '0x8d2bd8c2B963289674A922447c857D5938C1B05c'
+const CONTRACT_ADDRESS = '0x464e97B5E2598D2CCEb1d186B35ACe2363fD11cb'
 const AuroraContext = createContext({
   account: null,
   handleConnect: () => {
@@ -85,8 +85,22 @@ const AuroraProvider = ({ children }) => {
     // disconnect()
   }
 
-  const createCollection = async (name, uri) => {
-    const tx = await contract.createCollection(name, uri)
+  const createCollection = async (
+    name,
+    uri,
+    maxSupply,
+    earliestMintTimestamp,
+    latestMintTimestamp,
+    requiredPayment
+  ) => {
+    const tx = await contract.createCollection(
+      name,
+      uri,
+      maxSupply,
+      earliestMintTimestamp,
+      latestMintTimestamp,
+      requiredPayment
+    )
     console.log(tx)
     const res = await tx.wait()
     console.log(res)
