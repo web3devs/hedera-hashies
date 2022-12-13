@@ -15,6 +15,7 @@ class HashieToken {
   secretCode!: string
   price!: string
   createdAt!: string
+  fee?: number
 }
 
 // const storeNFT = async (image: File, name: string, description: string) => {

@@ -1,4 +1,4 @@
-import React, { ReactElement, useState } from 'react'
+import React, { ReactElement, useEffect, useState } from 'react'
 
 import { InputSwitch } from 'primereact/inputswitch'
 
@@ -6,14 +6,19 @@ const SwitchableField = ({
   children,
   title,
   subtitle,
+  toggle,
   className = ''
 }: {
   children: ReactElement | ReactElement[]
   title: string
   subtitle: string
+  toggle: (val: boolean) => unknown
   className?: string
 }) => {
   const [checked, setChecked] = useState(false)
+  useEffect(() => {
+    toggle(checked)
+  }, [checked])
   return (
     <div className={`${className} flex flex-column  mb-2`}>
       <div className="flex">

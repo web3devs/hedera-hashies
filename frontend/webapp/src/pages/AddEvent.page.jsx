@@ -11,45 +11,82 @@ import SwitchableField from '../components/SwitchableField'
 import { storeNFT, HashieToken } from '../helpers/ipfs'
 
 import './AddEvent.scss'
-import { validate } from 'validate.js'
 import { Dialog } from 'primereact/dialog'
 import { useNavigate } from 'react-router-dom'
 import { useAurora } from '../context/AuroraProvider'
 import { Image } from 'primereact'
+import { number, object, string, mixed, boolean, date } from 'yup'
 
-const constraints = {
-  eventName: {
-    presence: { allowEmpty: false }
-  },
-  description: {
-    presence: { allowEmpty: false }
-  },
-  selectedImage: {
-    presence: { allowEmpty: false }
-  },
-  url: { url: true }
+const schema = object({
+  eventName: string().required('Provide event name'),
+  description: string().required('Provide event description'),
+  selectedImage: mixed().nullable(true).required('Select an image'),
+  isDateEnabled: boolean(),
+  isQuantityEnabled: boolean(),
+  fromDate: date().when('isDateEnabled', {
+    is: true,
+    then: (schema) => {
+      return schema.required('Provide a start date')
+    }
+  }),
+  toDate: date().when('isDateEnabled', {
+    is: true,
+    then: (schema) => {
+      return schema.required('Provide end date')
+    }
+  }),
+  quantity: number().when('isQuantityEnabled', {
+    is: true,
+    then: (schema) => {
+      return schema
+        .typeError('Provide a number')
+        .integer('Must be an integer')
+        .moreThan(0, 'Must be greater than 0')
+    }
+  }),
+  url: string().url('Must be a valid url').required('URL is required'),
+  paymentOption: string(),
+  fee: number().when('paymentOption', {
+    is: (val) => {
+      return val === 'Paid'
+    },
+    then: (schema) => {
+      return schema
+        .typeError("Fee is required when 'Paid' is selected")
+        .moreThan(0, 'Must be greater than 0')
+        .required("Fee is required when 'Paid' is selected")
+    }
+  })
+})
+const DEFAULT_FORM = {
+  eventName: '',
+  description: '',
+  selectedImage: null,
+  paymentOption: 'Free',
+  isDateEnabled: false,
+  fromDate: undefined,
+  toDate: undefined,
+  isQuantityEnabled: false,
+  quantity: 0,
+  isCodeEnabled: false,
+  secretCode: '',
+  url: '',
+  isLimitedQuantityEnabled: false,
+  fee: 0
 }
 
 const AddEvent = () => {
   const navigate = useNavigate()
-  const [eventName, setEventName] = useState<string>('')
   const [isTouched, setIsTouched] = useState(false)
-  const [errors, setErrors] = useState<{ [key: string]: string[] }>()
-  const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const [paymentOption, setPaymentOption] = useState<string>('Free')
-  const [fromDate, setFromDate] = useState<Date | undefined>()
-  const [toDate, setToDate] = useState<Date | undefined>()
-  const [quantity, setQuantity] = useState<number | null>()
-  const [secretCode, setSecretCode] = useState<string>('')
-  const [url, setUrl] = useState<string | undefined>()
-  const [description, setDescription] = useState('')
+  const [errors, setErrors] = useState()
   const { createCollection, account, handleConnect } = useAurora()
   const [isLoading, setIsLoading] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
-  const [eventId, setEventId] = useState<string | null>(null)
-  const [collectionId, setCollectionId] = useState<string | null>()
+  const [eventId, setEventId] = useState(null)
+  const [collectionId, setCollectionId] = useState()
 
-  const fileUploadRef = useRef<HTMLInputElement>(null)
+  const [form, setForm] = useState({ ...DEFAULT_FORM })
+  const fileUploadRef = useRef(null)
 
   const isValid = useMemo(() => {
     if (!isTouched) {
@@ -59,22 +96,13 @@ const AddEvent = () => {
       !errors?.eventName &&
       !errors?.description &&
       !errors?.url &&
-      !errors?.selectedImage
+      !errors?.selectedImage &&
+      !errors?.fee
     )
   }, [errors, isTouched])
 
   const resetForm = () => {
-    setEventId(null)
-    setEventName('')
-    setIsTouched(false)
-    setDescription('')
-    setSelectedImage(null)
-    setPaymentOption('Free')
-    setFromDate(undefined)
-    setToDate(undefined)
-    setUrl('')
-    setSecretCode('')
-    setQuantity(null)
+    setForm({ ...DEFAULT_FORM })
   }
 
   useEffect(() => {
@@ -82,42 +110,56 @@ const AddEvent = () => {
       setErrors({})
       return
     }
-    const form = { eventName, description, url, selectedImage }
 
-    const err = validate(form, constraints)
-
-    setErrors(err)
-  }, [description, eventName, selectedImage, url, isTouched])
+    try {
+      const e = schema.validateSync(form, { abortEarly: false })
+      setErrors({})
+    } catch (error) {
+      const errors = {}
+      error.inner.forEach(({ path, message }) => {
+        errors[path] = message
+      })
+      setErrors(errors)
+    }
+  }, [form, isTouched])
 
   const handleSubmit = useCallback(async () => {
-    setIsTouched(true)
-    if (!selectedImage) {
-      throw new Error('No image!')
+    if (!isTouched) {
+      try {
+        schema.validateSync(form, { abortEarly: false })
+      } catch {
+        setIsTouched(true)
+        return
+      }
     }
+
     if (!isValid) {
-      return
+      throw new Error('Not valid!')
     }
+
     try {
       setIsLoading(true)
       const hashie = new HashieToken()
 
-      hashie.name = eventName
-      hashie.description = description
-      hashie.image = selectedImage
-      if (url) {
-        hashie.url = url
+      hashie.name = form.eventName
+      hashie.description = form.description
+      hashie.image = form.selectedImage
+      if (form.url) {
+        hashie.url = form.url
       }
-      hashie.timeLimitFrom = fromDate?.toISOString()
-      hashie.timeLimitTo = toDate?.toISOString()
+      hashie.timeLimitFrom = form?.fromDate?.toISOString()
+      hashie.timeLimitTo = form?.toDate?.toISOString()
       hashie.createdAt = new Date().toISOString()
-      if (quantity) {
-        hashie.quantity = quantity
-      }
-      if (secretCode) {
-        hashie.secretCode = secretCode
-      }
 
-      console.log('hashie: ', hashie)
+      if (form.isQuantityEnabled) {
+        hashie.quantity = form.quantity
+      }
+      if (form.secretCode) {
+        hashie.secretCode = form.secretCode
+      }
+      if (form.paymentOption === 'Paid' && form.fee) {
+        hashie.fee = form.fee
+      }
 
       const t = await storeNFT(hashie)
       const metadataURL = `https://ipfs.io/ipfs/${t.ipnft}/metadata.json`
@@ -126,7 +168,7 @@ const AddEvent = () => {
       const _eventId = t.ipnft
       console.log('_eventId:', _eventId)
 
-      const collectionId = await createCollection(eventName, metadataURL)
+      const collectionId = await createCollection(form.eventName, metadataURL)
       setEventId(_eventId)
       setCollectionId(collectionId)
       setShowConfirmation(true)
@@ -135,23 +177,36 @@ const AddEvent = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [isValid, selectedImage])
+  }, [isValid, form])
 
-  const handleSelectImage = async (files: FileList | null) => {
+  useEffect(() => {
+    if (form.paymentOption === 'Paid') {
+      setFormField('quantity', 0)
+    } else {
+      setFormField('quantity', null)
+    }
+  }, [form.paymentOption])
+
+  const handleSelectImage = async (files) => {
     if (files) {
       console.log(files[0])
-      setSelectedImage(files[0])
+      setFormField('selectedImage', files[0])
     } else {
-      setSelectedImage(null)
+      setFormField('selectedImage', null)
     }
   }
 
+  const setFormField = useCallback((key, value) => {
+    setForm((prev) => {
+      return { ...prev, [key]: value }
+    })
+  })
   const imageData = useMemo(() => {
-    if (!selectedImage) {
+    if (!form.selectedImage) {
       return null
     }
-    return URL.createObjectURL(selectedImage)
-  }, [selectedImage])
+    return URL.createObjectURL(form.selectedImage)
+  }, [form.selectedImage])
 
   return (
     <div className="flex flex-column justify-content-center align-items-center h-full">
@@ -159,14 +214,14 @@ const AddEvent = () => {
       <Card className="flex flex-column add-event">
         <Label className="">Event Name *</Label>
         <InputText
-          value={eventName}
-          onChange={(e) => setEventName(e.target.value)}
+          value={form.eventName || ''}
+          onChange={(e) => setFormField('eventName', e.target.value)}
         />
         <small className="p-error block text-xs text-left mb-4">
           {errors?.eventName}
         </small>
         <Label className="">Select on Image *</Label>
-        <div className="flex gap-2 mb-2 align-items-center">
+        <div className="flex gap-2 align-items-center">
           {imageData && (
             <Image
               src={imageData}
@@ -176,13 +231,13 @@ const AddEvent = () => {
               height="64"
             />
           )}
-          {selectedImage && (
+          {form.selectedImage && (
             <span className="text-xs justify-self-start ml-2">
-              {selectedImage.name}
+              {form.selectedImage.name}
             </span>
           )}
 
-          {selectedImage && (
+          {form.selectedImage && (
             <Button
               icon="pi pi-times"
               className="p-button-rounded p-button-outlined mr-4"
@@ -192,14 +247,16 @@ const AddEvent = () => {
               }}
             />
           )}
-          <Button
-            onClick={() => {
-              fileUploadRef?.current?.click()
-            }}
-            className="p-button-outlined justify-self-start"
-          >
-            Select an Image
-          </Button>
+          {!form.selectedImage && (
+            <Button
+              onClick={() => {
+                fileUploadRef?.current?.click()
+              }}
+              className="p-button-outlined justify-self-start"
+            >
+              Select an Image
+            </Button>
+          )}
           <input
             type="file"
             ref={fileUploadRef}
@@ -214,39 +271,51 @@ const AddEvent = () => {
         <InputTextarea
           rows={10}
           cols={30}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={form.description || ''}
+          onChange={(e) => setFormField('description', e.target.value)}
         />
         <small className="p-error block text-xs text-left mb-4">
           {errors?.description}
         </small>
         <Label className="">Event URL</Label>
         <InputText
-          value={url}
+          value={form.url || ''}
           onChange={(e) =>
-            setUrl(e.target.value.length === 0 ? undefined : e.target.value)
+            setFormField(
+              'url',
+              e.target.value.length === 0 ? undefined : e.target.value
+            )
           }
-        />{' '}
+        />
         <small className="p-error block text-xs text-left mb-4">
           {errors?.url}
         </small>
         <SwitchableField
           title="Limited quantity"
           className=""
+          toggle={(val) => {
+            setFormField('isQuantityEnabled', val)
+          }}
           subtitle="You can set the maximum number of times the FLOAT can be minted."
         >
           <Label className="">Amount</Label>
           <InputNumber
-            className="mb-4 w-50 align-self-start"
-            value={quantity}
+            className="w-50 align-self-start"
+            value={form.quantity || 0}
             onChange={(e) => {
-              setQuantity(e.value)
+              setFormField('quantity', e.value || 0)
             }}
           />
+          <small className="p-error block text-xs text-left mb-4">
+            {errors?.quantity}
+          </small>
         </SwitchableField>
         <SwitchableField
           title="Time limit"
           className=""
+          toggle={(val) => {
+            setFormField('isDateEnabled', val)
+          }}
           subtitle="Can only be minted between a specific time interval."
         >
           <div className="flex">
@@ -254,33 +323,42 @@ const AddEvent = () => {
               <Label className="">Start Date</Label>
               <Calendar
                 dateFormat="mm/dd/yy"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.value as Date)}
+                value={form.fromDate}
+                onChange={(e) => setFormField('fromDate', e.value)}
                 showTime={false}
               />
+              <small className="p-error block text-xs text-left">
+                {errors?.fromDate}
+              </small>
             </div>
             <div className="flex flex-column flex-grow-1 ml-1">
               <Label className="">End Date</Label>
               <Calendar
                 dateFormat="mm/dd/yy"
                 showTime={false}
-                value={toDate}
-                onChange={(e) => setToDate(e.value as Date)}
+                value={form.toDate}
+                onChange={(e) => setFormField('toDate', e.value)}
               />
+              <small className="p-error block text-xs text-left">
+                {errors?.toDate}
+              </small>
             </div>
           </div>
         </SwitchableField>
-        <SwitchableField
-          title="Use Secret Code"
-          subtitle="Your FLOAT can only be minted if people know the secret code."
-        >
-          <Label className="">Code</Label>
-          <InputText
-            className="mb-2"
-            value={secretCode}
-            onChange={(e) => setSecretCode(e.target.value)}
-          />
-        </SwitchableField>
+        {!process.env.REACT_APP_DISABLE_SECRET_CODE && (
+          <SwitchableField
+            title="Use Secret Code"
+            subtitle="Your FLOAT can only be minted if people know the secret code."
+          >
+            <Label className="">Code</Label>
+            <InputText
+              className="mb-2"
+              value={form.secretCode || 0}
+              onChange={(e) => setFormField('secretCode', e.target.value)}
+            />
+          </SwitchableField>
+        )}
+
         <div className="text-left text-sm flex-grow-1 text-white mb-2">
           Payment options
         </div>
@@ -295,25 +373,39 @@ const AddEvent = () => {
             <RadioButton
               name="paymentOption"
               value="Free"
-              onChange={(e) => setPaymentOption(e.value)}
-              checked={paymentOption === 'Free'}
+              onChange={(e) => setFormField('paymentOption', e.value)}
+              checked={form.paymentOption === 'Free'}
             />
           </div>
           <div className="flex align-items-center">
             <div className="flex-grow-1 mr-2">
               <div className="text-white text-sm text-left">Paid</div>
               <div className="text-xs text-left">
-                This HASHIE costs HBAR to claim. Suitable for things like
+                This HASHIE costs tokens to claim. Suitable for things like
                 tickets.
               </div>
             </div>
             <RadioButton
               name="paymentOption"
               value="Paid"
-              onChange={(e) => setPaymentOption(e.value)}
-              checked={paymentOption === 'Paid'}
+              onChange={(e) => setFormField('paymentOption', e.value)}
+              checked={form.paymentOption === 'Paid'}
             />
           </div>
+          {form.paymentOption === 'Paid' && (
+            <>
+              <InputNumber
+                className="w-50 align-self-start w-full fee-input"
+                value={form.quantity || 0}
+                onChange={(e) => {
+                  setFormField('fee', e.value)
+                }}
+              />
+              <small className="p-error block text-xs text-left mb-4">
+                {errors?.fee}
+              </small>
+            </>
+          )}
         </div>
         {account ? (
           <Button
