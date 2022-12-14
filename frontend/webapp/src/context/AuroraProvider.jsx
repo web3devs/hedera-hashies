@@ -136,12 +136,11 @@ const AuroraProvider = ({ children }) => {
   )
 
   const getOwnedTokens = async () => {
-    // if (!contract || !account) {
-    //   return
-    // }
-    // const tokenList = await contract.ownedTokens(account)
-    // return tokenList
-    return [1]
+    if (!contract || !account) {
+      return []
+    }
+    const tokenList = await contract.ownedTokens(account)
+    return tokenList
   }
 
   const getCollectionById = async (collectionId) => {

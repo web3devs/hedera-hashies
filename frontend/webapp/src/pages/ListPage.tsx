@@ -6,13 +6,10 @@ import { useAurora } from '../context/AuroraProvider'
 const ListPage = () => {
   const { getOwnedTokens, account } = useAurora()
   const [ownedTokens, setOwnedTokens] = useState<Array<BigNumber>>([])
-  console.log('>>>>>>>>', ownedTokens)
 
   useEffect(() => {
     const doIt = async () => {
       const ot = await getOwnedTokens()
-      console.log('account:', account)
-      console.log('ot:', ot)
       setOwnedTokens(ot)
     }
     doIt()
@@ -20,9 +17,17 @@ const ListPage = () => {
 
   return (
     <>
-      {ownedTokens.map((tokenId, idx) => (
-        <HashieDetailCard key={idx} collectionId={tokenId.toString()} />
-      ))}
+      <section className="w-12">
+        <h1>Minted</h1>
+        <div className="flex flex-wrap justify-content-center align-items-center">
+          {ownedTokens.map((tokenId, idx) => (
+            <HashieDetailCard key={idx} collectionId={tokenId.toString()} />
+          ))}
+        </div>
+      </section>
+      <section className="w-12">
+        <h1>Collections Created</h1>
+      </section>
     </>
   )
 }
