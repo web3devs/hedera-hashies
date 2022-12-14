@@ -77,6 +77,7 @@ const DEFAULT_FORM = {
   isQuantityEnabled: false,
   quantity: 0,
   isCodeEnabled: false,
+  isSecredCodeEnabled: false,
   secretCode: '',
   url: '',
   isLimitedQuantityEnabled: false,
@@ -356,6 +357,9 @@ const AddEvent = () => {
           <SwitchableField
             title="Use Secret Code"
             subtitle="Your FLOAT can only be minted if people know the secret code."
+            toggle={(val) => {
+              setFormField('isSecretCodeEnabled', val)
+            }}
           >
             <Label className="">Code</Label>
             <InputText
