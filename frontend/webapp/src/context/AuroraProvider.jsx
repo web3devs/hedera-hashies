@@ -1,21 +1,20 @@
 import React, {
   createContext,
-  ReactElement,
+  useCallback,
   useContext,
   useEffect,
-  useCallback,
   useState
 } from 'react'
 import { ethers, BigNumber } from 'ethers'
 import HashiesContract from '../contracts/Hashies.json'
 import {
-  registerCallback,
-  unregisterCallback,
-  initProvider,
+  connectToWallet,
   getAccountAddress,
   getProvider,
-  connectToWallet,
-  getSigner
+  getSigner,
+  initProvider,
+  registerCallback,
+  unregisterCallback
 } from '../contracts/metamask'
 
 const CONTRACT_ADDRESS = '0x464e97B5E2598D2CCEb1d186B35ACe2363fD11cb'
@@ -36,6 +35,12 @@ const AuroraContext = createContext({
   createCollection: async (name, uri) => {
     //NOOP
     return ''
+  },
+  getOwnedTokens: async () => {
+    return []
+  },
+  getCollectionById: async (collectionId) => {
+    return {}
   }
 })
 export const useAurora = () => useContext(AuroraContext)
@@ -129,6 +134,23 @@ const AuroraProvider = ({ children }) => {
     },
     [contract, account]
   )
+
+  const getOwnedTokens = async () => {
+    // if (!contract || !account) {
+    //   return
+    // }
+    // const tokenList = await contract.ownedTokens(account)
+    // return tokenList
+    return [1]
+  }
+
+  const getCollectionById = async (collectionId) => {
+    if (!contract || !account) {
+      return
+    }
+    return await contract.collections(collectionId)
+  }
+
   return (
     <AuroraContext.Provider
       value={{
@@ -137,7 +159,9 @@ const AuroraProvider = ({ children }) => {
         account,
         getBalance,
         mint,
-        createCollection
+        createCollection,
+        getOwnedTokens,
+        getCollectionById
       }}
     >
       {children}

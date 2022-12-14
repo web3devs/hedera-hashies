@@ -6,8 +6,10 @@ import HomePage from './pages/Home.page'
 import NavBar from './components/NavBar'
 import ConfirmationPage from './pages/EventDetails.page'
 import MintPage from './pages/Mint.page'
+// import TestPage from './pages/Test.page'
 import { HederaAPIProvider } from './context/HederaAPIProvider'
 import AuroraProvider from './context/AuroraProvider'
+import ListPage from './pages/ListPage'
 
 const router = createBrowserRouter([
   {
@@ -25,7 +27,15 @@ const router = createBrowserRouter([
   {
     path: '/mint/:code/:collectionId',
     element: <MintPage />
+  },
+  {
+    path: '/list',
+    element: <ListPage />
   }
+  // {
+  //   path: '/test',
+  //   element: <TestPage />
+  // }
 ])
 const App = () => {
   return (
