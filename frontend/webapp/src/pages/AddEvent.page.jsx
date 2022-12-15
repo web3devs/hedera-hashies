@@ -5,31 +5,41 @@ import { InputNumber } from 'primereact/inputnumber'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { RadioButton } from 'primereact/radiobutton'
+import { SelectButton } from 'primereact/selectbutton'
 import Card from '../components/Card'
 import Label from '../components/Label'
 import SwitchableField from '../components/SwitchableField'
 import { storeNFT, HashieToken } from '../helpers/ipfs'
+import Star from '../assets/img-star.svg'
+import People from '../assets/img-people.svg'
+import Present from '../assets/img-present.svg'
 
 import './AddEvent.scss'
 import { Dialog } from 'primereact/dialog'
 import { useNavigate } from 'react-router-dom'
 import { useAurora } from '../context/AuroraProvider'
-import { Image } from 'primereact'
+import { Image, InputSwitch } from 'primereact'
 import { number, object, string, mixed, boolean, date } from 'yup'
 
 const schema = object({
   eventName: string().required('Provide event name'),
   description: string().required('Provide event description'),
+  isCustomImage: boolean(),
+  // selectedImage: mixed().when('isCustomImage',{
+  //   is:true,
+  //   then:(schema) => schema.nullable(true).required('Select an image')
+  // }),
   selectedImage: mixed().nullable(true).required('Select an image'),
-  isDateEnabled: boolean(),
+  isStartDateEnabled: boolean(),
+  isEndDateEnabled: boolean(),
   isQuantityEnabled: boolean(),
-  fromDate: date().when('isDateEnabled', {
+  fromDate: date().when('isStartDateEnabled', {
     is: true,
     then: (schema) => {
       return schema.required('Provide a start date')
     }
   }),
-  toDate: date().when('isDateEnabled', {
+  toDate: date().when('isEndDateEnabled', {
     is: true,
     then: (schema) => {
       return schema.required('Provide end date')
@@ -71,8 +81,9 @@ const DEFAULT_FORM = {
   description: '',
   selectedImage: null,
   paymentOption: 'Free',
-  isDateEnabled: false,
+  isStartDateEnabled: false,
   fromDate: undefined,
+  isEndDateEnabled: false,
   toDate: undefined,
   isQuantityEnabled: false,
   quantity: 0,
@@ -84,6 +95,23 @@ const DEFAULT_FORM = {
   fee: 0,
   feeAddress: ''
 }
+const svgToBase64 = (svg) => {
+  // const s = new XMLSerializer().serializeToString(svg)
+  // const a = window.btoa(svg)
+  // return atob(`data:image/svg+xml;base64,${a}`)
+  // const blob = new Blob([`data:image/svg+xml;base64,${a}`], {
+  //   type: 'image/svg+xml'
+  // })
+  const blob = new Blob(['svg'], {
+    type: 'text/plain'
+  })
+  //   const url = URL.createObjectURL(blob)
+  // //
+  console.log(blob)
+  const file = new File([blob], 'file.svg', { type: 'image/svg+xml' })
+
+  return file
+}
 
 const AddEvent = () => {
   const navigate = useNavigate()
@@ -94,6 +122,7 @@ const AddEvent = () => {
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [eventId, setEventId] = useState(null)
   const [collectionId, setCollectionId] = useState()
+  const [selectedImage, setSelectedImage] = useState(0)
 
   const [form, setForm] = useState({ ...DEFAULT_FORM })
   const fileUploadRef = useRef(null)
@@ -170,13 +199,13 @@ const AddEvent = () => {
         hashie.fee = form.fee
       }
 
+      console.log(form.selectedImage instanceof Blob)
       const t = await storeNFT(hashie)
       const metadataURL = `https://ipfs.io/ipfs/${t.ipnft}/metadata.json`
       console.log('metadataURL: ', metadataURL)
 
       const _eventId = t.ipnft
       console.log('_eventId:', _eventId)
-
       const collectionId = await createCollection(
         form.eventName,
         metadataURL,
@@ -210,12 +239,12 @@ const AddEvent = () => {
     })
   })
   const imageData = useMemo(() => {
-    if (!form.selectedImage) {
-      return null
-    }
-    return URL.createObjectURL(form.selectedImage)
+    // if (!form.selectedImage) {
+    return null
+    // }
+    // return URL.createObjectURL(form.selectedImage)
   }, [form.selectedImage])
-
+  const [isCustomImage, setIsCustomImage] = useState(true)
   return (
     <div className="flex flex-column justify-content-center align-items-center h-full">
       <h1 className="text-2xl font-bold text-white">Create a new event</h1>
@@ -229,52 +258,101 @@ const AddEvent = () => {
           {errors?.eventName}
         </small>
         <Label className="">Select on Image *</Label>
-        <div className="flex gap-2 align-items-center">
-          {imageData && (
-            <Image
-              src={imageData}
-              className="justify-self-start"
-              alt="image-previev"
-              width="64"
-              height="64"
-            />
-          )}
-          {form.selectedImage && (
-            <span className="text-xs justify-self-start ml-2">
-              {form.selectedImage.name}
-            </span>
-          )}
-
-          {form.selectedImage && (
-            <Button
-              icon="pi pi-times"
-              className="p-button-rounded p-button-outlined mr-4"
-              aria-label="Cancel"
-              onClick={() => {
-                handleSelectImage(null)
-              }}
-            />
-          )}
-          {!form.selectedImage && (
-            <Button
-              onClick={() => {
-                fileUploadRef?.current?.click()
-              }}
-              className="p-button-outlined justify-self-start"
-            >
-              Select an Image
-            </Button>
-          )}
-          <input
-            type="file"
-            ref={fileUploadRef}
-            onChange={(e) => handleSelectImage(e.target.files)}
-            style={{ display: 'none' }}
+        <div className="flex flex-row mb-2">
+          <InputSwitch
+            checked={isCustomImage}
+            className="mr-2"
+            onChange={(e) => setIsCustomImage(e.value)}
           />
+          <span>Select custom image</span>
         </div>
-        <small className="p-error block text-xs text-left mb-4">
-          {errors?.selectedImage}
-        </small>
+        {!isCustomImage && (
+          <div className="flex">
+            <img
+              src={Star}
+              onClick={() => {
+                setSelectedImage(0)
+                setFormField('selectedImage', svgToBase64(Star))
+              }}
+              alt="star"
+              className={`image${
+                selectedImage === 0 && ' selected'
+              } cursor-pointer`}
+            />
+            <img
+              src={People}
+              onClick={() => {
+                setSelectedImage(1)
+                setFormField('selectedImage', svgToBase64(People))
+              }}
+              alt="people"
+              className={`image${
+                selectedImage === 1 && ' selected'
+              } cursor-pointer`}
+            />
+            <img
+              src={Present}
+              onClick={() => {
+                setSelectedImage(2)
+                setFormField('selectedImage', svgToBase64(Present))
+              }}
+              alt="present"
+              className={`image${
+                selectedImage === 2 && ' selected'
+              } cursor-pointer`}
+            />
+          </div>
+        )}
+        {isCustomImage && (
+          <>
+            <div className="flex gap-2 align-items-center">
+              {imageData && (
+                <Image
+                  src={imageData}
+                  className="justify-self-start"
+                  alt="image-previev"
+                  width="64"
+                  height="64"
+                />
+              )}
+              {form.selectedImage && (
+                <span className="text-xs justify-self-start ml-2">
+                  {form.selectedImage.name}
+                </span>
+              )}
+
+              {form.selectedImage && (
+                <Button
+                  icon="pi pi-times"
+                  className="p-button-rounded p-button-outlined mr-4"
+                  aria-label="Cancel"
+                  onClick={() => {
+                    handleSelectImage(null)
+                  }}
+                />
+              )}
+              {!form.selectedImage && (
+                <Button
+                  onClick={() => {
+                    fileUploadRef?.current?.click()
+                  }}
+                  className="p-button-outlined justify-self-start"
+                >
+                  Select an Image
+                </Button>
+              )}
+              <input
+                type="file"
+                ref={fileUploadRef}
+                onChange={(e) => handleSelectImage(e.target.files)}
+                style={{ display: 'none' }}
+              />
+            </div>
+            <small className="p-error block text-xs text-left mb-4">
+              {errors?.selectedImage}
+            </small>
+          </>
+        )}
         <Label className="">Event Description *</Label>
         <InputTextarea
           rows={10}
@@ -319,38 +397,45 @@ const AddEvent = () => {
           </small>
         </SwitchableField>
         <SwitchableField
-          title="Time limit"
+          title="Start date"
           className=""
           toggle={(val) => {
-            setFormField('isDateEnabled', val)
+            setFormField('isStartDateEnabled', val)
           }}
-          subtitle="Can only be minted between a specific time interval."
+          subtitle="Can only be minted between a from a specific timedate."
         >
-          <div className="flex">
-            <div className="flex flex-column flex-grow-1 mr-1">
-              <Label className="">Start Date</Label>
-              <Calendar
-                dateFormat="mm/dd/yy"
-                value={form.fromDate}
-                onChange={(e) => setFormField('fromDate', e.value)}
-                showTime={false}
-              />
-              <small className="p-error block text-xs text-left">
-                {errors?.fromDate}
-              </small>
-            </div>
-            <div className="flex flex-column flex-grow-1 ml-1">
-              <Label className="">End Date</Label>
-              <Calendar
-                dateFormat="mm/dd/yy"
-                showTime={false}
-                value={form.toDate}
-                onChange={(e) => setFormField('toDate', e.value)}
-              />
-              <small className="p-error block text-xs text-left">
-                {errors?.toDate}
-              </small>
-            </div>
+          <div className="flex flex-column flex-grow-1 mr-1">
+            <Label className="">Start Date</Label>
+            <Calendar
+              dateFormat="mm/dd/yy"
+              value={form.fromDate}
+              onChange={(e) => setFormField('fromDate', e.value)}
+              showTime={true}
+            />
+            <small className="p-error block text-xs text-left">
+              {errors?.fromDate}
+            </small>
+          </div>
+        </SwitchableField>
+        <SwitchableField
+          title="End date"
+          className=""
+          toggle={(val) => {
+            setFormField('isEndDateEnabled', val)
+          }}
+          subtitle="Can only be minted between a to a specific timedate."
+        >
+          <div className="flex flex-column flex-grow-1 ml-1">
+            <Label className="">End Date</Label>
+            <Calendar
+              dateFormat="mm/dd/yy"
+              showTime={true}
+              value={form.toDate}
+              onChange={(e) => setFormField('toDate', e.value)}
+            />
+            <small className="p-error block text-xs text-left">
+              {errors?.toDate}
+            </small>
           </div>
         </SwitchableField>
         {!process.env.REACT_APP_DISABLE_SECRET_CODE && (

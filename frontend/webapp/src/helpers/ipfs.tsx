@@ -8,7 +8,7 @@ class HashieToken {
   name!: string
   url!: string
   description!: string
-  image!: File
+  image!: File | Blob
   quantity!: number
   timeLimitFrom!: string | undefined
   timeLimitTo!: string | undefined
@@ -21,8 +21,11 @@ class HashieToken {
 // const storeNFT = async (image: File, name: string, description: string) => {
 const storeNFT = async (t: HashieToken) => {
   const nftstorage = new NFTStorage({ token: NFT_STORAGE_KEY })
-
-  return nftstorage.store(t)
+  if (t.image instanceof File) {
+    return nftstorage.store(t)
+  } else {
+    return nftstorage.storeBlob(t.image)
+  }
 }
 
 export { storeNFT, HashieToken }

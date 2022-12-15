@@ -26,6 +26,49 @@ const EventDetails = () => {
   const { nfts, getMintedTokens, hasToken } = useHeaderAPI()
   const { mint, account, getBalance } = useAurora()
   const [hasNFT, setHasNFT] = useState(false)
+  const [timer, setTimer] = useState(Date.now())
+
+  const exceededDeadline = useMemo(() => {
+    if (endDate && timer > endDate.getTime()) {
+      return <div>You cannot mint this hashie anymore</div>
+    }
+    return null
+  }, [endDate, timer])
+  const timeLeftToStart = useMemo(() => {
+    if (fromDate) {
+      const distance = fromDate.getTime() - timer
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24))
+      const hours = Math.floor(
+        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      )
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+      let str = ''
+      if (days > 0) {
+        str += days + ' d '
+      }
+      if (hours > 0) {
+        str += hours + ' h '
+      }
+      if (minutes > 0) {
+        str += minutes + ' m '
+      }
+      if (seconds > 0) {
+        str += seconds + ' s '
+      }
+
+      return str
+    } else {
+      return null
+    }
+  }, [fromDate, timer])
+
+  useEffect(() => {
+    const interval = setInterval(() => setTimer(Date.now()), 1000)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     ;(async () => {
       const num = await getBalance(collectionId)
@@ -51,7 +94,7 @@ const EventDetails = () => {
         hasNFT
       )
     }
-    return true
+    return isTimeValid
   }, [
     hasNFT,
     limit,
@@ -110,6 +153,20 @@ const EventDetails = () => {
     }
   }, [code, name, description, image])
 
+  const isTimeValid = useMemo(() => {
+    const now = new Date().getTime()
+    if (fromDate && endDate) {
+      return now > fromDate.getTime() && now < endDate.getTime()
+    }
+    if (fromDate) {
+      return now > fromDate.getTime()
+    }
+    if (endDate) {
+      return now < endDate.getTime()
+    }
+
+    return
+  }, [fromDate, endDate])
   useEffect(() => {
     if (code) {
       const tokensMinted = getMintedTokens(code)
@@ -216,10 +273,18 @@ const EventDetails = () => {
                 />
               </>
             )}
-            <div className="col-12 mb-2 flex flex-column align-items-center">
+            <div className="col-12 mb-2 flex flex-column align-items-center p-4">
+              {timeLeftToStart && (
+                <span className="text-sm text-white">
+                  You can mint this token in {timeLeftToStart}
+                </span>
+              )}
+              {exceededDeadline && (
+                <span className="text-sm text-white">{exceededDeadline}</span>
+              )}
               <Button
                 label="Mint Hashie!"
-                className="submit mt-4 pr-4 pl-4"
+                className="submit pr-4 pl-4"
                 onClick={handleMint}
                 disabled={blockMint}
               />
