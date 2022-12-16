@@ -7,25 +7,37 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./ERC1155EnumerableByOwnerUpgradeable.sol";
+import "./HashiesEnumerableByCollectionOwnerUpgradeable.sol";
 
-struct HashiesCollection {
-    address owner;
-    string name;
-    string uri;
-    uint256 maxSupply;
-    uint256 earliestMintTimestamp;
-    uint256 latestMintTimestamp;
-    uint256 requiredPayment;
-}
+//import "hardhat/console.sol";
+
+    struct HashiesCollection {
+        address owner;
+        string name;
+        string uri;
+        uint256 maxSupply;
+        uint256 earliestMintTimestamp;
+        uint256 latestMintTimestamp;
+        uint256 requiredPayment;
+        uint256 flags;
+    }
 
 contract Hashies is
 Initializable, ERC1155Upgradeable, ERC1155BurnableUpgradeable, OwnableUpgradeable, ERC1155SupplyUpgradeable,
-ERC1155EnumerableByOwnerUpgradeable {
+ERC1155EnumerableByOwnerUpgradeable, HashiesEnumerableByCollectionOwnerUpgradeable {
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     mapping(uint256 => HashiesCollection) public collections;
     uint256 public collectionsCount;
 
+    uint256 internal constant TRANSFERABLE_FLAG_BIT = 0;
+    uint256 internal constant BURNABLE_FLAG_BIT = 1;
+    uint256 internal constant SECRET_WORD_TOKEN_REQUIRED_BIT = 2;
+    uint256 internal constant MINTING_DISABLED_BIT = 3;
+
     event CollectionCreated(address owner, uint256 collectionId);
     event PaymentReceived(uint256 collectionId, address payee, uint256 amount);
+    event MintingPaused(uint256 collectionId);
+    event MintingResumed(uint256 collectionId);
 
     error OnlyOneAllowedPerAddress(address minter, uint256 collectionId);
     error UnknownCollection();
@@ -35,6 +47,12 @@ ERC1155EnumerableByOwnerUpgradeable {
     error OutsideOfMintingTimeRange();
     error EndingTimestampTooEarly();
     error InsufficientPayment(uint256 expected, uint256 received);
+    error NotTransferable();
+    error NotSupported();
+    error MintingDisabled();
+    error MintingActive();
+    error OnlyCollectionOwner();
+    error NotBurnable();
 
     modifier OnlyOnePerAddress(uint256 collectionId) {
         if (balanceOf(msg.sender, collectionId) != 0) {
@@ -103,6 +121,46 @@ ERC1155EnumerableByOwnerUpgradeable {
         _;
     }
 
+    modifier IsTransferable(uint256 collectionId) {
+        bool isTransferable = (collections[collectionId].flags & (1 << TRANSFERABLE_FLAG_BIT)) != 0;
+        if (!isTransferable) {
+            revert NotTransferable();
+        }
+        _;
+    }
+
+    modifier MintingIsEnabled(uint256 collectionId) {
+        bool isDisabled = (collections[collectionId].flags & (1 << MINTING_DISABLED_BIT)) != 0;
+        if (isDisabled) {
+            revert MintingDisabled();
+        }
+        _;
+    }
+
+    modifier MintingIsPaused(uint256 collectionId) {
+        bool isDisabled = (collections[collectionId].flags & (1 << MINTING_DISABLED_BIT)) != 0;
+        if (!isDisabled) {
+            revert MintingActive();
+        }
+        _;
+    }
+
+    modifier CollectionIsBurnable(uint256 collectionId) {
+        bool isBurnable = (collections[collectionId].flags & (1 << BURNABLE_FLAG_BIT)) != 0;
+        if (!isBurnable) {
+            revert NotBurnable();
+        }
+        _;
+    }
+
+    modifier CollectionOwner(uint256 collectionId) {
+        bool isCollectionOwner = collections[collectionId].owner == msg.sender;
+        if (!isCollectionOwner) {
+            revert OnlyCollectionOwner();
+        }
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -113,6 +171,8 @@ ERC1155EnumerableByOwnerUpgradeable {
         __ERC1155Burnable_init();
         __Ownable_init();
         __ERC1155Supply_init();
+        __ERC1155EnumerableByOwner_init();
+        __HashiesEnumerableByCollectionOwner_init();
     }
 
     function createCollection(
@@ -121,13 +181,15 @@ ERC1155EnumerableByOwnerUpgradeable {
         uint256 maxSupply,
         uint256 earliestMintTimestamp,
         uint256 latestMintTimestamp,
-        uint256 requiredPayment
-    ) external
+        uint256 requiredPayment,
+        uint256 flags
+    ) public
     NameNotEmpty(name)
     NowIsBeforeLatestTimestamp(latestMintTimestamp)
     EarlyTimestampBeforeLatestTimestamp(earliestMintTimestamp, latestMintTimestamp)
     {
-        uint256 collectionId = collectionsCount; // TODO collectionIds should not be predictable
+        uint256 collectionId = collectionsCount;
+        // TODO collectionIds should not be predictable
         HashiesCollection memory collection;
         collection.owner = msg.sender;
         collection.name = name;
@@ -136,11 +198,32 @@ ERC1155EnumerableByOwnerUpgradeable {
         collection.earliestMintTimestamp = earliestMintTimestamp;
         collection.latestMintTimestamp = latestMintTimestamp;
         collection.requiredPayment = requiredPayment;
+        collection.flags = flags;
 
         collections[collectionId] = collection;
         collectionsCount += 1;
 
+        _afterCollectionCreation(msg.sender, collectionId);
+
         emit CollectionCreated(msg.sender, collectionId);
+    }
+
+    function pauseMinting(uint256 collectionId) external
+    ExistingCollection(collectionId)
+    CollectionOwner(collectionId)
+    MintingIsEnabled(collectionId)
+    {
+        collections[collectionId].flags = collections[collectionId].flags | (1 << MINTING_DISABLED_BIT);
+        emit MintingPaused(collectionId);
+    }
+
+    function resumeMinting(uint256 collectionId) external
+    ExistingCollection(collectionId)
+    CollectionOwner(collectionId)
+    MintingIsPaused(collectionId)
+    {
+        collections[collectionId].flags = collections[collectionId].flags ^ (1 << MINTING_DISABLED_BIT);
+        emit MintingResumed(collectionId);
     }
 
     function mint(uint256 collectionId) public payable
@@ -150,6 +233,7 @@ ERC1155EnumerableByOwnerUpgradeable {
     AfterEarliestTime(collectionId)
     BeforeLatestTime(collectionId)
     HasSufficientPayment(collectionId)
+    MintingIsEnabled(collectionId)
     {
         // TODO Set up a ClaimableWallet for incoming payments instead of sending directly
         if (msg.value != 0) {
@@ -160,15 +244,65 @@ ERC1155EnumerableByOwnerUpgradeable {
         _mint(msg.sender, collectionId, 1, '');
     }
 
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256,
+        bytes memory data
+    ) public virtual override
+    IsTransferable(id)
+    {
+        super.safeTransferFrom(from, to, id, 1, data);
+    }
+
+    function safeBatchTransferFrom(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public virtual override
+    {
+        revert NotSupported();
+    }
+
+    function burn(address account, uint256 collectionId, uint256)
+    public virtual override(ERC1155BurnableUpgradeable)
+    ExistingCollection(collectionId)
+    CollectionIsBurnable(collectionId)
+    {
+        super.burn(account, collectionId, 1);
+    }
+
+    function burnBatch(address, uint256[] memory, uint256[] memory)
+    public virtual override(ERC1155BurnableUpgradeable)
+    {
+        revert NotSupported();
+    }
+
     // The following override is required by OpenSea and probably other marketplaces
     function uri(uint256 collectionId) public view virtual override returns (string memory uri_) {
         uri_ = collections[collectionId].uri;
     }
 
-    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    )
     internal
     override(ERC1155Upgradeable, ERC1155SupplyUpgradeable, ERC1155EnumerableByOwnerUpgradeable)
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    function _afterCollectionCreation(address operator, uint256 collectionId)
+    internal override(HashiesEnumerableByCollectionOwnerUpgradeable)
+    {
+        super._afterCollectionCreation(operator, collectionId);
     }
 }

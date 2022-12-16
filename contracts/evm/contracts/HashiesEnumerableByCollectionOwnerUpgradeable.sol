@@ -5,15 +5,15 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
-abstract contract ERC1155EnumerableByOwnerUpgradeable is Initializable, ERC1155Upgradeable {
+abstract contract HashiesEnumerableByCollectionOwnerUpgradeable is Initializable, ERC1155Upgradeable {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
-    mapping(address => EnumerableSetUpgradeable.UintSet) private _tokensByOwner;
+    mapping(address => EnumerableSetUpgradeable.UintSet) private _collectionsByOwner;
 
-    function __ERC1155EnumerableByOwner_init() internal onlyInitializing {
+    function __HashiesEnumerableByCollectionOwner_init() internal onlyInitializing {
     }
 
-    function __ERC1155EnumerableByOwner_init_unchained() internal onlyInitializing {
+    function __HashiesEnumerableByCollectionOwner_init_unchained() internal onlyInitializing {
     }
 
     /**
@@ -22,27 +22,13 @@ abstract contract ERC1155EnumerableByOwnerUpgradeable is Initializable, ERC1155U
      * this function has an unbounded cost, and using it as part of a state-changing function may render the function
      * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.
     **/
-    function ownedTokens(address owner) public view virtual returns (uint[] memory ids) {
-        return EnumerableSetUpgradeable.values(_tokensByOwner[owner]);
+    function ownedCollections(address owner) public view virtual returns (uint[] memory ids) {
+        return EnumerableSetUpgradeable.values(_collectionsByOwner[owner]);
     }
 
-    function _beforeTokenTransfer(
-        address operator,
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-        for (uint256 i = 0; i < ids.length; ++i) {
-            if (from != address(0) && balanceOf(from, ids[i]) <= amounts[i]) {
-                EnumerableSetUpgradeable.remove(_tokensByOwner[from], ids[i]);
-            }
-            if (to != address(0)) {
-                EnumerableSetUpgradeable.add(_tokensByOwner[to], ids[i]);
-            }
-        }
+    function _afterCollectionCreation(address operator, uint256 collectionId)
+    internal virtual {
+        EnumerableSetUpgradeable.add(_collectionsByOwner[operator], collectionId);
     }
 
     /**

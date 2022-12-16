@@ -9,7 +9,16 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./ERC1155EnumerableByOwnerUpgradeable.sol";
 import "./Hashies.sol";
 
-contract TestV2 is Initializable, ERC1155Upgradeable, ERC1155BurnableUpgradeable, OwnableUpgradeable, ERC1155SupplyUpgradeable, ERC1155EnumerableByOwnerUpgradeable {
+
+contract TestV2 is
+Initializable,
+ERC1155Upgradeable,
+ERC1155BurnableUpgradeable,
+OwnableUpgradeable,
+ERC1155SupplyUpgradeable,
+ERC1155EnumerableByOwnerUpgradeable,
+HashiesEnumerableByCollectionOwnerUpgradeable
+{
     mapping(uint256 => HashiesCollection) public collections;
     uint256 public collectionsCount;
 
