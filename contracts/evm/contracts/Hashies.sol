@@ -7,27 +7,27 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./ERC1155EnumerableByOwnerUpgradeable.sol";
-import "./HashiesEnumerableByCollectionOwnerUpgradeable.sol";
 
 //import "hardhat/console.sol";
 
-    struct HashiesCollection {
-        address owner;
-        string name;
-        string uri;
-        uint256 maxSupply;
-        uint256 earliestMintTimestamp;
-        uint256 latestMintTimestamp;
-        uint256 requiredPayment;
-        uint256 flags;
-    }
+struct HashiesCollection {
+    address owner;
+    string name;
+    string uri;
+    uint256 maxSupply;
+    uint256 earliestMintTimestamp;
+    uint256 latestMintTimestamp;
+    uint256 requiredPayment;
+    uint256 flags;
+}
 
 contract Hashies is
 Initializable, ERC1155Upgradeable, ERC1155BurnableUpgradeable, OwnableUpgradeable, ERC1155SupplyUpgradeable,
-ERC1155EnumerableByOwnerUpgradeable, HashiesEnumerableByCollectionOwnerUpgradeable {
+ERC1155EnumerableByOwnerUpgradeable {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     mapping(uint256 => HashiesCollection) public collections;
     uint256 public collectionsCount;
+    mapping(address => EnumerableSetUpgradeable.UintSet) private _collectionsByOwner;
 
     uint256 internal constant TRANSFERABLE_FLAG_BIT = 0;
     uint256 internal constant BURNABLE_FLAG_BIT = 1;
@@ -172,7 +172,6 @@ ERC1155EnumerableByOwnerUpgradeable, HashiesEnumerableByCollectionOwnerUpgradeab
         __Ownable_init();
         __ERC1155Supply_init();
         __ERC1155EnumerableByOwner_init();
-        __HashiesEnumerableByCollectionOwner_init();
     }
 
     function createCollection(
@@ -203,7 +202,7 @@ ERC1155EnumerableByOwnerUpgradeable, HashiesEnumerableByCollectionOwnerUpgradeab
         collections[collectionId] = collection;
         collectionsCount += 1;
 
-        _afterCollectionCreation(msg.sender, collectionId);
+        EnumerableSetUpgradeable.add(_collectionsByOwner[msg.sender], collectionId);
 
         emit CollectionCreated(msg.sender, collectionId);
     }
@@ -300,9 +299,13 @@ ERC1155EnumerableByOwnerUpgradeable, HashiesEnumerableByCollectionOwnerUpgradeab
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
-    function _afterCollectionCreation(address operator, uint256 collectionId)
-    internal override(HashiesEnumerableByCollectionOwnerUpgradeable)
-    {
-        super._afterCollectionCreation(operator, collectionId);
+    /**
+     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed
+     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that
+     * this function has an unbounded cost, and using it as part of a state-changing function may render the function
+     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.
+    **/
+    function ownedCollections(address owner) public view virtual returns (uint[] memory ids) {
+        return EnumerableSetUpgradeable.values(_collectionsByOwner[owner]);
     }
 }

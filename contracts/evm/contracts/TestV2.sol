@@ -16,11 +16,11 @@ ERC1155Upgradeable,
 ERC1155BurnableUpgradeable,
 OwnableUpgradeable,
 ERC1155SupplyUpgradeable,
-ERC1155EnumerableByOwnerUpgradeable,
-HashiesEnumerableByCollectionOwnerUpgradeable
+ERC1155EnumerableByOwnerUpgradeable
 {
     mapping(uint256 => HashiesCollection) public collections;
     uint256 public collectionsCount;
+    mapping(address => EnumerableSetUpgradeable.UintSet) private _collectionsByOwner;
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
     internal
