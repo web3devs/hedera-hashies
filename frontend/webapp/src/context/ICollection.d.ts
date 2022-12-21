@@ -1,12 +1,12 @@
-import { BigNumberish } from 'ethers'
+import { BigNumber } from 'ethers'
 
 interface ICollection {
   owner: string;
   name: string;
   uri: string;
-  maxSupply: BigNumberish;
-  earliestMintTimestamp: BigNumberish;
-  latestMintTimestamp: BigNumberish;
-  requiredPayment: BigNumberish;
-  // uint256 flags;
+  maxSupply: BigNumber;
+  earliestMintTimestamp: BigNumber;
+  latestMintTimestamp: BigNumber;
+  requiredPayment: BigNumber;
+  flags: BigNumber;
 }

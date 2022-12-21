@@ -28,4 +28,10 @@ const storeNFT = async (t: HashieToken) => {
   }
 }
 
-export { storeNFT, HashieToken }
+function webifyUri(uri: string): string {
+  return uri.startsWith('ipfs://')
+    ? `https://ipfs.io/ipfs/${uri.slice(7)}`
+    : uri
+}
+
+export { storeNFT, HashieToken, webifyUri }

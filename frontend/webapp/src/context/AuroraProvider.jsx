@@ -19,10 +19,10 @@ import {
 
 const CONTRACT_ADDRESS = '0x464e97B5E2598D2CCEb1d186B35ACe2363fD11cb'
 
-const TRANSFERABLE_FLAG_BIT = 1 << 0
-const BURNABLE_FLAG_BIT = 1 << 1
-const SECRET_WORD_TOKEN_REQUIRED_BIT = 1 << 2
-const MINTING_DISABLED_BIT = 1 << 3
+export const TRANSFERABLE_FLAG_BIT = 1 << 0
+export const BURNABLE_FLAG_BIT = 1 << 1
+export const SECRET_WORD_TOKEN_REQUIRED_BIT = 1 << 2
+export const MINTING_DISABLED_BIT = 1 << 3
 
 const AuroraContext = createContext({
   account: null,

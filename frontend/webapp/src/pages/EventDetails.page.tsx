@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom'
 import { useHeaderAPI } from '../context/HederaAPIProvider'
 import { Image, InputText, Toast } from 'primereact'
 import { useAurora } from '../context/AuroraProvider'
+import HashieImage from '../components/HashieImage'
 
 const EventDetails = () => {
   const { code, collectionId } = useParams()
@@ -76,6 +77,22 @@ const EventDetails = () => {
       setHasNFT(num > 0)
     })()
   }, [collectionId, account])
+
+  const isTimeValid = useMemo(() => {
+    const now = new Date().getTime()
+    if (fromDate && endDate) {
+      return now > fromDate.getTime() && now < endDate.getTime()
+    }
+    if (fromDate) {
+      return now > fromDate.getTime()
+    }
+    if (endDate) {
+      return now < endDate.getTime()
+    }
+
+    return
+  }, [fromDate, endDate])
+
   const blockMint = useMemo(() => {
     if (collectionId && account) {
       const now = new Date().getTime()
@@ -105,7 +122,8 @@ const EventDetails = () => {
     inputSecretCode,
     nfts,
     code,
-    account
+    account,
+    isTimeValid
   ])
 
   useEffect(() => {
@@ -153,20 +171,6 @@ const EventDetails = () => {
     }
   }, [code, name, description, image])
 
-  const isTimeValid = useMemo(() => {
-    const now = new Date().getTime()
-    if (fromDate && endDate) {
-      return now > fromDate.getTime() && now < endDate.getTime()
-    }
-    if (fromDate) {
-      return now > fromDate.getTime()
-    }
-    if (endDate) {
-      return now < endDate.getTime()
-    }
-
-    return
-  }, [fromDate, endDate])
   useEffect(() => {
     if (code) {
       const tokensMinted = getMintedTokens(code)
@@ -191,23 +195,7 @@ const EventDetails = () => {
       <Card className="grid grid-nogutter xl:xl:w-4 lg:w-6 md:w-7 sm:w-full">
         {!loading ? (
           <>
-            {image ? (
-              <Image
-                src={image}
-                alt="Event image"
-                className="col-3"
-                width="120"
-                height="120"
-                preview
-              />
-            ) : (
-              <Image
-                src={Star}
-                alt="Placeholder image"
-                className="col-3"
-                preview
-              />
-            )}
+            <HashieImage imageUri={image} className="col-3" />
             <div className="text-lg text-left text-white col-9 pl-4">
               <h2 className="mt-0">{name}</h2>
             </div>
