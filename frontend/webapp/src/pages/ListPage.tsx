@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { BigNumber } from 'ethers'
 import HashieDetailCard from '../components/HashieDetailCard'
-import { useAurora } from '../context/AuroraProvider'
+import { useHashies } from '../context/HashiesProvider'
 import HashieCollectionDetailCard from '../components/HashieCollectionDetailCard'
 
 const ListPage = () => {
-  const { getOwnedTokens, getOwnedCollections, account } = useAurora()
+  const { getOwnedTokens, getOwnedCollections, account } = useHashies()
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [ownedTokens, setOwnedTokens] = useState<Array<BigNumber>>([])
   const [ownedCollections, setOwnedCollections] = useState<Array<BigNumber>>([])

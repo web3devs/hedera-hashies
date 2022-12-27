@@ -5,7 +5,7 @@ import { useHeaderAccess } from '../context/HederaProvider'
 
 import './Mint.scss'
 import { Button } from 'primereact'
-import { useAurora } from '../context/AuroraProvider'
+import { useHashies } from '../context/HashiesProvider'
 
 enum State {
   INIT = 1,
@@ -74,10 +74,10 @@ const Progress = () => {
 
 const Mint = () => {
   const [state, setState] = useState<State>(State.INIT)
-  const { code, collectionId } = useParams()
+  const { collectionId } = useParams()
   const { signer } = useHeaderAccess()
 
-  const { mint } = useAurora()
+  const { mint } = useHashies()
 
   const handleMint = useCallback(async () => {
     try {

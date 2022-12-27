@@ -10,7 +10,7 @@ type ImageProps = {
 
 const HashieImage = ({ imageUri, className }: ImageProps) => {
   const [usePlaceholderImage, setUsePlaceholderImage] = useState<boolean>(false)
-  const onErrorImage = (e: any) => setUsePlaceholderImage(true)
+  const onErrorImage = () => setUsePlaceholderImage(true)
   return (
     <Image
       src={imageUri && !usePlaceholderImage ? webifyUri(imageUri) : Star}

@@ -6,8 +6,9 @@ import React, {
   useState
 } from 'react'
 import { BigNumber, ethers } from 'ethers'
-import HashiesContract from '../contracts/Hashies.json'
+import HashiesAbi from '../contracts/Hashies.json'
 import {
+  chainConfig,
   connectToWallet,
   getAccountAddress,
   getProvider,
@@ -17,44 +18,48 @@ import {
   unregisterCallback
 } from '../contracts/metamask'
 
-const CONTRACT_ADDRESS = '0x464e97B5E2598D2CCEb1d186B35ACe2363fD11cb'
+const contractAddress = chainConfig?.contractAddress
 
 export const TRANSFERABLE_FLAG_BIT = 1 << 0
 export const BURNABLE_FLAG_BIT = 1 << 1
 export const SECRET_WORD_TOKEN_REQUIRED_BIT = 1 << 2
 export const MINTING_DISABLED_BIT = 1 << 3
 
-const AuroraContext = createContext({
-  account: null,
-  handleConnect: () => {
-    //NOOP
-  },
-  handleDisconnect: () => {
-    //NOOP
-  },
-  getBalance: async (collectionId) => {
-    return 0
-  },
-  mint: async (collectionId) => {
-    //NOOP
-  },
-  createCollection: async (name, uri) => {
-    //NOOP
-    return ''
-  },
-  getOwnedTokens: async () => {
-    return []
-  },
-  getOwnedCollections: async () => {
-    return []
-  },
-  getCollectionById: async (collectionId) => {
-    return {}
-  }
-})
-export const useAurora = () => useContext(AuroraContext)
+const AuroraContext = createContext()
+// {
+//   account: null,
+//   getChainConfig: () => {
+//     //NOOP
+//   },
+//   handleConnect: () => {
+//     //NOOP
+//   },
+//   handleDisconnect: () => {
+//     //NOOP
+//   },
+//   getBalance: async (collectionId) => {
+//     return 0
+//   },
+//   mint: async (collectionId) => {
+//     //NOOP
+//   },
+//   createCollection: async (name, uri) => {
+//     //NOOP
+//     return ''
+//   },
+//   getOwnedTokens: async () => {
+//     return []
+//   },
+//   getOwnedCollections: async () => {
+//     return []
+//   },
+//   getCollectionById: async (collectionId) => {
+//     return {}
+//   }
+// })
+export const useHashies = () => useContext(AuroraContext)
 
-const AuroraProvider = ({ children }) => {
+const HashiesProvider = ({ children }) => {
   const [contract, setContract] = useState(null)
   const [account, setAccount] = useState(null)
   const [provider, setProvider] = useState(null)
@@ -73,8 +78,8 @@ const AuroraProvider = ({ children }) => {
         const signer = getSigner()
         setSigner(signer)
         const contract = new ethers.Contract(
-          CONTRACT_ADDRESS,
-          HashiesContract.abi,
+          contractAddress,
+          HashiesAbi.abi,
           signer
         )
         setContract(contract)
@@ -176,12 +181,15 @@ const AuroraProvider = ({ children }) => {
     return await contract.collections(collectionId)
   }
 
+  const getChainConfig = () => chainConfig
+
   return (
     <AuroraContext.Provider
       value={{
         handleConnect,
         handleDisconnect,
         account,
+        getChainConfig,
         getBalance,
         mint,
         createCollection,
@@ -195,4 +203,4 @@ const AuroraProvider = ({ children }) => {
   )
 }
 
-export default AuroraProvider
+export default HashiesProvider

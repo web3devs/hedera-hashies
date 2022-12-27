@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react'
-import { useAurora } from '../context/AuroraProvider'
+import { useHashies } from '../context/HashiesProvider'
 import { formatAddress } from '../helpers'
 import './ConnectWalletButton.scss'
 const ConnectWalletButton = () => {
-  const { account, handleConnect, handleDisconnect } = useAurora()
+  const { account, handleConnect, handleDisconnect } = useHashies()
   return (
     <div
       className="connect-wallet-button"

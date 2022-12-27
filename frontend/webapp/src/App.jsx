@@ -8,7 +8,7 @@ import ConfirmationPage from './pages/EventDetails.page'
 import MintPage from './pages/Mint.page'
 // import TestPage from './pages/Test.page'
 import { HederaAPIProvider } from './context/HederaAPIProvider'
-import AuroraProvider from './context/AuroraProvider'
+import HashiesProvider from './context/HashiesProvider'
 import ListPage from './pages/ListPage'
 
 const router = createBrowserRouter([
@@ -40,12 +40,12 @@ const router = createBrowserRouter([
 const App = () => {
   return (
     <div className="App bg">
-      <AuroraProvider>
+      <HashiesProvider>
         <HederaAPIProvider>
           <NavBar />
           <RouterProvider router={router} />
         </HederaAPIProvider>
-      </AuroraProvider>
+      </HashiesProvider>
     </div>
   )
 }

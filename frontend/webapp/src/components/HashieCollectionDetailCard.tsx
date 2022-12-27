@@ -6,8 +6,8 @@ import {
   MINTING_DISABLED_BIT,
   SECRET_WORD_TOKEN_REQUIRED_BIT,
   TRANSFERABLE_FLAG_BIT,
-  useAurora
-} from '../context/AuroraProvider'
+  useHashies
+} from '../context/HashiesProvider'
 import { BigNumberish } from '@hashgraph/hethers'
 import { ICollection } from '../context/ICollection'
 import { webifyUri } from '../helpers/ipfs'
@@ -16,8 +16,8 @@ import HashieImage from './HashieImage'
 import { Button } from 'primereact/button'
 import { Toast } from 'primereact'
 
-const HashiesDetailCard = ({ collectionId }: any) => {
-  const { getCollectionById } = useAurora()
+const HashiesCollectionDetailCard = ({ collectionId }: any) => {
+  const { getCollectionById } = useHashies()
 
   const toast = useRef<Toast>(null)
 
@@ -177,4 +177,4 @@ const HashiesDetailCard = ({ collectionId }: any) => {
   )
 }
 
-export default HashiesDetailCard
+export default HashiesCollectionDetailCard

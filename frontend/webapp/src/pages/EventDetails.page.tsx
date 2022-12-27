@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from 'primereact/button'
 import Card from '../components/Card'
-import Star from '../assets/img-star.svg'
 import './EventDetails.scss'
 import { useParams } from 'react-router-dom'
 import { useHeaderAPI } from '../context/HederaAPIProvider'
-import { Image, InputText, Toast } from 'primereact'
-import { useAurora } from '../context/AuroraProvider'
+import { InputText, Toast } from 'primereact'
+import { useHashies } from '../context/HashiesProvider'
 import HashieImage from '../components/HashieImage'
+import { webifyUri } from '../helpers/ipfs'
 
 const EventDetails = () => {
   const { code, collectionId } = useParams()
@@ -25,7 +25,7 @@ const EventDetails = () => {
   const [image, setImage] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
   const { nfts, getMintedTokens, hasToken } = useHeaderAPI()
-  const { mint, account, getBalance } = useAurora()
+  const { mint, account, getBalance } = useHashies()
   const [hasNFT, setHasNFT] = useState(false)
   const [timer, setTimer] = useState(Date.now())
 
@@ -149,12 +149,8 @@ const EventDetails = () => {
         secretCode,
         url
       } = data
-      if (image.startsWith('ipfs://')) {
-        const [, , imageCid, imageFileName] = image.split('/')
-        setImage(`https://ipfs.io/ipfs/${imageCid}/${imageFileName}`)
-      } else {
-        setImage(image)
-      }
+
+      setImage(webifyUri(image))
       setDescription(description)
       setName(name)
       setURL(url)

@@ -1,30 +1,30 @@
-import React, { useRef } from 'react'
-import { Image } from 'primereact'
-import Star from '../assets/img-star.svg'
+import React from 'react'
 import Card from './Card'
 import { useEffect, useState } from 'react'
-import { useAurora } from '../context/AuroraProvider'
+import { useHashies } from '../context/HashiesProvider'
 import { BigNumberish } from '@hashgraph/hethers'
 import { ICollection } from '../context/ICollection'
 import { webifyUri } from '../helpers/ipfs'
 import HashieImage from './HashieImage'
 
-const HashiesDetailCard = ({ collectionId }: any) => {
-  const { getCollectionById } = useAurora()
+type HashiesDetailCardProperties = {
+  collectionId: string
+}
+
+const HashiesDetailCard = ({ collectionId }: HashiesDetailCardProperties) => {
+  const { getCollectionById } = useHashies()
 
   const [imageUri, setImageUri] = useState<string | null>(null)
   const [name, setName] = useState<string>()
   const [description, setDescription] = useState<string>()
   const [eventUrl, setEventUrl] = useState<string>()
 
-  const i = useRef()
-
   async function getHashieMetadata(collectionId: BigNumberish) {
     const collection = (await getCollectionById(collectionId)) as ICollection
     const uri = webifyUri(collection.uri)
 
     const response = await fetch(uri) // TODO The assets stored on IPFS need to be pinned!
-    const data: any = await response.json()
+    const data = await response.json()
     const { image, name, description, url } = data
 
     setImageUri(image)

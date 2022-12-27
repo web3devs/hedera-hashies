@@ -5,7 +5,6 @@ import { InputNumber } from 'primereact/inputnumber'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { RadioButton } from 'primereact/radiobutton'
-import { SelectButton } from 'primereact/selectbutton'
 import Card from '../components/Card'
 import Label from '../components/Label'
 import SwitchableField from '../components/SwitchableField'
@@ -17,7 +16,7 @@ import Present from '../assets/img-present.svg'
 import './AddEvent.scss'
 import { Dialog } from 'primereact/dialog'
 import { useNavigate } from 'react-router-dom'
-import { useAurora } from '../context/AuroraProvider'
+import { useHashies } from '../context/HashiesProvider'
 import { Image, InputSwitch } from 'primereact'
 import { number, object, string, mixed, boolean, date } from 'yup'
 
@@ -117,7 +116,7 @@ const AddEvent = () => {
   const navigate = useNavigate()
   const [isTouched, setIsTouched] = useState(false)
   const [errors, setErrors] = useState()
-  const { createCollection, account, handleConnect } = useAurora()
+  const { createCollection, account, handleConnect } = useHashies()
   const [isLoading, setIsLoading] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [eventId, setEventId] = useState(null)
