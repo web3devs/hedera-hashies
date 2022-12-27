@@ -7,7 +7,7 @@ import React, {
   useState
 } from 'react'
 import HashieConfig from '../settings.json'
-import { useAurora } from './AuroraProvider'
+import { useHashies } from './HashiesProvider'
 
 interface HederaProviderProps {
   children: ReactNode
