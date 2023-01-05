@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom'
 import { useHashies } from '../context/HashiesProvider'
 import { Image, InputSwitch } from 'primereact'
 import { number, object, string, mixed, boolean, date } from 'yup'
+import ActionOrConnectButton from '../components/ActionOrConnectButton'
 
 const schema = object({
   eventName: string().required('Provide event name'),
@@ -95,18 +96,9 @@ const DEFAULT_FORM = {
   feeAddress: ''
 }
 const svgToBase64 = (svg) => {
-  // const s = new XMLSerializer().serializeToString(svg)
-  // const a = window.btoa(svg)
-  // return atob(`data:image/svg+xml;base64,${a}`)
-  // const blob = new Blob([`data:image/svg+xml;base64,${a}`], {
-  //   type: 'image/svg+xml'
-  // })
   const blob = new Blob(['svg'], {
     type: 'text/plain'
   })
-  //   const url = URL.createObjectURL(blob)
-  // //
-  console.log(blob)
   const file = new File([blob], 'file.svg', { type: 'image/svg+xml' })
 
   return file
@@ -116,7 +108,7 @@ const AddEvent = () => {
   const navigate = useNavigate()
   const [isTouched, setIsTouched] = useState(false)
   const [errors, setErrors] = useState()
-  const { createCollection, account, handleConnect } = useHashies()
+  const { createCollection } = useHashies()
   const [isLoading, setIsLoading] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [eventId, setEventId] = useState(null)
@@ -513,23 +505,14 @@ const AddEvent = () => {
             </>
           )}
         </div>
-        {account ? (
-          <Button
-            label="Create event"
-            className="submit mt-4"
-            loading={isLoading}
-            onClick={handleSubmit}
-            disabled={eventId !== null || !isValid}
-          />
-        ) : (
-          <Button
-            label="Connect Wallet"
-            className="submit mt-4"
-            loading={isLoading}
-            onClick={handleConnect}
-            disabled={eventId !== null}
-          />
-        )}
+        <ActionOrConnectButton
+          actionLabel="Create event"
+          className="submit mt-4"
+          isLoading={isLoading}
+          action={handleSubmit}
+          eventId={eventId}
+          isValid={!isValid}
+        />
       </Card>
       <Dialog
         visible={showConfirmation}

@@ -10,8 +10,8 @@ import HashiesAbi from '../contracts/Hashies.json'
 import {
   chainConfig,
   connectToWallet,
+  disconnect,
   getAccountAddress,
-  getProvider,
   getSigner,
   initProvider,
   registerCallback,
@@ -25,68 +25,31 @@ export const BURNABLE_FLAG_BIT = 1 << 1
 export const SECRET_WORD_TOKEN_REQUIRED_BIT = 1 << 2
 export const MINTING_DISABLED_BIT = 1 << 3
 
-const AuroraContext = createContext()
-// {
-//   account: null,
-//   getChainConfig: () => {
-//     //NOOP
-//   },
-//   handleConnect: () => {
-//     //NOOP
-//   },
-//   handleDisconnect: () => {
-//     //NOOP
-//   },
-//   getBalance: async (collectionId) => {
-//     return 0
-//   },
-//   mint: async (collectionId) => {
-//     //NOOP
-//   },
-//   createCollection: async (name, uri) => {
-//     //NOOP
-//     return ''
-//   },
-//   getOwnedTokens: async () => {
-//     return []
-//   },
-//   getOwnedCollections: async () => {
-//     return []
-//   },
-//   getCollectionById: async (collectionId) => {
-//     return {}
-//   }
-// })
-export const useHashies = () => useContext(AuroraContext)
+const context = createContext()
+export const useHashies = () => useContext(context)
 
 const HashiesProvider = ({ children }) => {
   const [contract, setContract] = useState(null)
   const [account, setAccount] = useState(null)
-  const [provider, setProvider] = useState(null)
-  const [signer, setSigner] = useState(null)
-  const handleConnect = () => {
-    connectToWallet()
-  }
+  const handleConnect = connectToWallet
 
   useEffect(() => {
-    registerCallback('auth', async () => {
-      const addres = getAccountAddress()
-
-      if (addres) {
-        setAccount(getAccountAddress())
-        setProvider(getProvider())
-        const signer = getSigner()
-        setSigner(signer)
-        const contract = new ethers.Contract(
+    const loadContract = () => {
+      if (contract) return
+      const address = getAccountAddress()
+      if (address) {
+        setAccount(address)
+        const _contract = new ethers.Contract(
           contractAddress,
           HashiesAbi.abi,
-          signer
+          getSigner()
         )
-        setContract(contract)
+        setContract(_contract)
       } else {
         setAccount(null)
       }
-    })
+    }
+    registerCallback('auth', loadContract)
     ;(async () => {
       try {
         await initProvider()
@@ -97,11 +60,11 @@ const HashiesProvider = ({ children }) => {
     return () => {
       unregisterCallback('auth')
     }
-  }, [])
+  }, [contract])
 
   const handleDisconnect = () => {
     console.log('disconnect')
-    // disconnect()
+    disconnect()
   }
 
   const createCollection = async (
@@ -116,6 +79,7 @@ const HashiesProvider = ({ children }) => {
     disabled = false
     // , secretWord = ''
   ) => {
+    if (!contract) throw new Error('Contract not set')
     // TODO The secret word bit is unavailable until a secret word token lambda is created
     const flags =
       (transferable ? TRANSFERABLE_FLAG_BIT : 0) +
@@ -131,22 +95,17 @@ const HashiesProvider = ({ children }) => {
       requiredPayment,
       flags
     )
-    console.log(tx)
     const res = await tx.wait()
-    console.log(res)
 
     const event = res.events.findIndex((ev) => ev.event === 'CollectionCreated')
     const collectionId = res.events[event].args[1]
-    console.log('collectionId', collectionId)
     return BigNumber.from(collectionId).toString()
   }
 
   const mint = async (collectionId) => {
-    console.log(collectionId)
+    if (!contract) throw new Error('Contract not set')
     const tx = await contract.mint(collectionId)
-    console.log(tx)
-    const res = await tx.wait()
-    console.log(res)
+    await tx.wait()
   }
 
   const getBalance = useCallback(
@@ -167,6 +126,14 @@ const HashiesProvider = ({ children }) => {
     return await contract.ownedTokens(account)
   }
 
+  const getTotalSupply = async (collectionId) => {
+    if (!contract) {
+      return -1
+    }
+    const ts = await contract.totalSupply(collectionId)
+    return BigNumber.from(ts).toNumber()
+  }
+
   const getOwnedCollections = async () => {
     if (!contract || !account) {
       return []
@@ -184,7 +151,7 @@ const HashiesProvider = ({ children }) => {
   const getChainConfig = () => chainConfig
 
   return (
-    <AuroraContext.Provider
+    <context.Provider
       value={{
         handleConnect,
         handleDisconnect,
@@ -195,11 +162,12 @@ const HashiesProvider = ({ children }) => {
         createCollection,
         getOwnedTokens,
         getOwnedCollections,
-        getCollectionById
+        getCollectionById,
+        getTotalSupply
       }}
     >
       {children}
-    </AuroraContext.Provider>
+    </context.Provider>
   )
 }
 

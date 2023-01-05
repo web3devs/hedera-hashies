@@ -1,18 +1,18 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from 'primereact/button'
 import Card from '../components/Card'
 import './EventDetails.scss'
 import { useParams } from 'react-router-dom'
-import { useHeaderAPI } from '../context/HederaAPIProvider'
 import { InputText, Toast } from 'primereact'
 import { useHashies } from '../context/HashiesProvider'
 import HashieImage from '../components/HashieImage'
 import { webifyUri } from '../helpers/ipfs'
+import ActionOrConnectButton from '../components/ActionOrConnectButton'
 
 const EventDetails = () => {
   const { code, collectionId } = useParams()
   const toast = useRef<Toast>(null)
-  const [loading, isLoading] = useState<boolean>(true)
+  const [loading, setLoading] = useState<boolean>(true)
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [fromDate, setFromDate] = useState<Date | null>(null)
   const [createdAt, setCreatedAt] = useState(new Date())
@@ -24,10 +24,10 @@ const EventDetails = () => {
   const [name, setName] = useState<string | null>(null)
   const [image, setImage] = useState<string | null>(null)
   const [description, setDescription] = useState<string | null>(null)
-  const { nfts, getMintedTokens, hasToken } = useHeaderAPI()
-  const { mint, account, getBalance } = useHashies()
+  const { mint, getBalance, account, getTotalSupply } = useHashies()
   const [hasNFT, setHasNFT] = useState(false)
   const [timer, setTimer] = useState(Date.now())
+  const [isMinting, setIsMinting] = useState(false)
 
   const exceededDeadline = useMemo(() => {
     if (endDate && timer > endDate.getTime()) {
@@ -73,10 +73,11 @@ const EventDetails = () => {
   useEffect(() => {
     ;(async () => {
       const num = await getBalance(collectionId)
-      console.log(num)
       setHasNFT(num > 0)
+      const qtyMinted = await getTotalSupply(collectionId)
+      setMintedNum(qtyMinted)
     })()
-  }, [collectionId, account])
+  }, [collectionId, account, hasNFT])
 
   const isTimeValid = useMemo(() => {
     const now = new Date().getTime()
@@ -94,7 +95,7 @@ const EventDetails = () => {
   }, [fromDate, endDate])
 
   const blockMint = useMemo(() => {
-    if (collectionId && account) {
+    if (collectionId) {
       const now = new Date().getTime()
       const isAfterDeadline = !!endDate && now > (endDate?.getTime() || 0)
       const isBeforeStart = !!fromDate && now < (fromDate?.getTime() || 0)
@@ -120,24 +121,20 @@ const EventDetails = () => {
     endDate,
     secretCode,
     inputSecretCode,
-    nfts,
     code,
-    account,
     isTimeValid
   ])
 
   useEffect(() => {
     const _fetch = async () => {
-      isLoading(true)
+      setLoading(true)
       if (!code) {
-        isLoading(false)
+        setLoading(false)
         return
       }
 
       const response = await fetch(`https://ipfs.io/ipfs/${code}/metadata.json`)
       const data = await response.json()
-      console.log(data)
-      console.log(window.location.origin)
       const {
         description,
         image,
@@ -160,27 +157,23 @@ const EventDetails = () => {
       setLimit(quantity)
       setSecretCode(secretCode)
 
-      isLoading(false)
+      setLoading(false)
     }
     if (name === null && description === null && image === null && code) {
       _fetch()
     }
   }, [code, name, description, image])
 
-  useEffect(() => {
-    if (code) {
-      const tokensMinted = getMintedTokens(code)
-      setMintedNum(tokensMinted)
-    }
-  }, [code, nfts])
-
-  const handleMint = useCallback(async () => {
-    if (!collectionId) {
-      return
-    }
-
-    mint(collectionId)
-  }, [collectionId])
+  const handleMint = async () => {
+    setIsMinting(true)
+    await mint(collectionId)
+    setIsMinting(false)
+    setHasNFT(true)
+    toast?.current?.show({
+      severity: 'info',
+      summary: 'Successfully minted'
+    })
+  }
 
   const eventDetailsUrl = useMemo(() => {
     return `https://hashie.net/event/${code}/${collectionId}`
@@ -237,7 +230,7 @@ const EventDetails = () => {
               <div className="flex flex-column col-6">
                 <div className="text-sm text-left">Tokens minted</div>
                 <div className="text-sm text-left text-white mt-2">
-                  {mintedNum}
+                  {mintedNum !== -1 ? mintedNum : 'loading'}
                 </div>
               </div>
               <div className="flex flex-column col-6">
@@ -266,11 +259,12 @@ const EventDetails = () => {
               {exceededDeadline && (
                 <span className="text-sm text-white">{exceededDeadline}</span>
               )}
-              <Button
-                label="Mint Hashie!"
-                className="submit pr-4 pl-4"
-                onClick={handleMint}
-                disabled={blockMint}
+              <ActionOrConnectButton
+                actionLabel={!isMinting ? 'Mint Hashie!' : 'Minting...'}
+                className="submit mt-4"
+                isLoading={false}
+                action={handleMint}
+                disabled={!!blockMint || isMinting}
               />
               {hasNFT && <div className="mt-2">You already own this token</div>}
             </div>

@@ -22,7 +22,7 @@ export interface Metadata {
   network: NetworkStage
 }
 
-interface HederaAccessContextType {
+interface IWalletContext {
   accountId: string | null
   isConnected: boolean
   connect: () => unknown
@@ -31,7 +31,7 @@ interface HederaAccessContextType {
   hashConnect: HashConnect | null
 }
 
-const HeaderAccessContext = createContext<HederaAccessContextType>({
+const WalletContext = createContext<IWalletContext>({
   accountId: null,
   isConnected: false,
   connect: () => {
@@ -45,9 +45,9 @@ const HeaderAccessContext = createContext<HederaAccessContextType>({
   hashConnect: null
 })
 
-export const useHeaderAccess = () => useContext(HeaderAccessContext)
+export const useWallet = () => useContext(WalletContext)
 
-interface HederaProviderProps {
+interface WalletProviderProps {
   children: ReactNode
   meta: Metadata
   nftAddress: string
@@ -63,7 +63,7 @@ export const clearPairings = () => {
   hashConnect.clearConnectionsAndData()
 }
 
-export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
+export const HederaWalletProvider = ({ meta, children }: WalletProviderProps) => {
   const [pairingData, setPairingData] =
     useState<HashConnectTypes.SavedPairingData | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -185,8 +185,6 @@ export const HederaProvider = ({ meta, children }: HederaProviderProps) => {
     [accountId, isConnected, connect, disconnect, signer, hashConnect]
   )
   return (
-    <HeaderAccessContext.Provider value={value}>
-      {children}
-    </HeaderAccessContext.Provider>
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
   )
 }

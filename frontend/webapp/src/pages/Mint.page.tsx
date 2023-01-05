@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useCallback } from 'react'
 import Card from '../components/Card'
 import { useParams } from 'react-router-dom'
-import { useHeaderAccess } from '../context/HederaProvider'
 
 import './Mint.scss'
-import { Button } from 'primereact'
 import { useHashies } from '../context/HashiesProvider'
+import ActionOrConnectButton from '../components/ActionOrConnectButton'
+import { BigNumberish } from '@hashgraph/hethers'
 
 enum State {
   INIT = 1,
@@ -14,14 +14,21 @@ enum State {
   FAILURE = 4
 }
 
-const Init = ({ handleSubmit }: { handleSubmit: () => unknown }) => {
+type InitParameters = {
+  handleSubmit: () => unknown
+  eventId: BigNumberish
+}
+
+const Init = ({ handleSubmit }: InitParameters) => {
   return (
     <div className="flex flex-column align-items-center col-12">
       <div className="text-white text-lg">Click here to claim your token</div>
-      <Button
-        label="Mint Hashie!"
+      <ActionOrConnectButton
+        actionLabel="Mint Hashie!"
         className="submit mt-4"
-        onClick={handleSubmit}
+        isLoading={false}
+        action={handleSubmit}
+        disabled={false}
       />
     </div>
   )
@@ -75,28 +82,23 @@ const Progress = () => {
 const Mint = () => {
   const [state, setState] = useState<State>(State.INIT)
   const { collectionId } = useParams()
-  const { signer } = useHeaderAccess()
 
   const { mint } = useHashies()
 
   const handleMint = useCallback(async () => {
     try {
-      if (!signer) {
-        console.error('no signer')
-        return
-      }
       setState(State.PROGRESS)
       await mint(collectionId)
       setState(State.SUCCESS)
     } catch {
       setState(State.FAILURE)
     }
-  }, [signer])
+  }, [])
 
   const content = useMemo(() => {
     switch (state) {
       case State.INIT: {
-        return <Init handleSubmit={handleMint} />
+        return <Init handleSubmit={handleMint} eventId={collectionId || ''} />
       }
       case State.PROGRESS: {
         return <Progress />
