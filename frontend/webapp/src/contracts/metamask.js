@@ -73,7 +73,7 @@ export const initProvider = async () => {
       method: 'wallet_addEthereumChain',
       params: [
         {
-          chainName: 'Aurora testnet',
+          chainName: chainConfig.name,
           chainId: ethers.utils.hexlify(chainConfig.chainId),
           // nativeCurrency: { name: 'MATIC', decimals: 18, symbol: 'MATIC' },
           rpcUrls: [chainConfig.url]
