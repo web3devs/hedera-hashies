@@ -44,13 +44,16 @@ describe('Hashies', function() {
       const { hashies, owner } = await loadFixture(deployFixture)
       expect(await hashies.owner()).to.equal(owner.address)
     })
+    it('should report the correct version string', async () => {
+      const { hashies } = await loadFixture(deployFixture)
+      expect(await hashies.getVersion()).to.equal("0.1.0")
+    })
     it('Should be upgradable', async function() {
       const { hashies } = await loadFixture(deployFixture)
 
       const HashiesV2 = await ethers.getContractFactory('TestV2')
       const v2 = await upgrades.upgradeProxy(hashies.address, HashiesV2)
-
-      // TODO check to make sure it worked
+      expect(await hashies.getVersion()).to.eq("2.2.2")
     })
   })
   describe('Collections', () => {

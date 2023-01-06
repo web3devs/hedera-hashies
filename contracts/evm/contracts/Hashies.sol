@@ -29,6 +29,8 @@ ERC1155EnumerableByOwnerUpgradeable {
     uint256 public collectionsCount;
     mapping(address => EnumerableSetUpgradeable.UintSet) private _collectionsByOwner;
 
+    string internal constant VERSION = "0.1.0";
+
     uint256 internal constant TRANSFERABLE_FLAG_BIT = 0;
     uint256 internal constant BURNABLE_FLAG_BIT = 1;
     uint256 internal constant SECRET_WORD_TOKEN_REQUIRED_BIT = 2;
@@ -172,6 +174,10 @@ ERC1155EnumerableByOwnerUpgradeable {
         __Ownable_init();
         __ERC1155Supply_init();
         __ERC1155EnumerableByOwner_init();
+    }
+
+    function getVersion() public pure returns (string memory version) {
+        version = VERSION;
     }
 
     function createCollection(

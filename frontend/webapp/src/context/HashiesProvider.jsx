@@ -25,6 +25,8 @@ export const BURNABLE_FLAG_BIT = 1 << 1
 export const SECRET_WORD_TOKEN_REQUIRED_BIT = 1 << 2
 export const MINTING_DISABLED_BIT = 1 << 3
 
+const CONTRACT_VERSION = '0.1.0'
+
 const context = createContext()
 export const useHashies = () => useContext(context)
 
@@ -34,7 +36,8 @@ const HashiesProvider = ({ children }) => {
   const handleConnect = connectToWallet
 
   useEffect(() => {
-    const loadContract = () => {
+    // TODO Refactor this ugliness
+    registerCallback('auth', () => {
       if (contract) return
       const address = getAccountAddress()
       if (address) {
@@ -48,10 +51,16 @@ const HashiesProvider = ({ children }) => {
       } else {
         setAccount(null)
       }
-    }
-    registerCallback('auth', loadContract)
+    })
     ;(async () => {
       try {
+        if (contract) {
+          const contractVersion = await contract.getVersion()
+          console.assert(
+            contractVersion === CONTRACT_VERSION,
+            `Wrong contract version, expected ${CONTRACT_VERSION}, deployed: ${contractVersion}`
+          )
+        }
         await initProvider()
       } catch (err) {
         console.error(err)

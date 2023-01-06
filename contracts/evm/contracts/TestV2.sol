@@ -29,4 +29,8 @@ ERC1155EnumerableByOwnerUpgradeable
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
+    function getVersion() public pure returns(string memory version) {
+        version = "2.2.2";
+    }
+
 }

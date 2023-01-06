@@ -7,8 +7,9 @@
     "clean": "rm -rf ./artifacts/ ./cache/",
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy.ts",
-    "deploy:testnet": "yarn clean && yarn compile && npx hardhat run scripts/deploy.ts --network testnet_aurora"
+    "predeploy": "yarn clean && yarn compile && yarn test",
+    "deploy:testnet_aurora": "yarn predeploy && hardhat run scripts/deploy.ts --network testnet_aurora",
+    "upgrade:testnet_aurora": "yarn predeploy && hardhat run scripts/upgrade.ts --network testnet_aurora"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
