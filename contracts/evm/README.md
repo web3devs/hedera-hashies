@@ -1,14 +1,28 @@
 # Hashies Contracts
+Current contract version: 0.1.0
+
+# How to deploy
+### Initial deployment
+TODO
+
+### Upgrade existing deployment
+TODO
 
 ## Deployments
 The EVM version of the contract is deployed as an upgradable proxy where calls to the proxy are forwarded to the contract with the actual implementation. Use the proxy address to call the contract. The implementation address is provided for reference only.
 
 ### Aurora Testnet
 - Proxy: [0x464e97B5E2598D2CCEb1d186B35ACe2363fD11cb](https://testnet.aurorascan.dev/address/0x464e97B5E2598D2CCEb1d186B35ACe2363fD11cb)
-- Implementation: [0x2C0f80c4ec1C0b310d074Cd0557628364E783248](https://testnet.aurorascan.dev/address/0x2C0f80c4ec1C0b310d074Cd0557628364E783248)
+- Implementation: ~~[0x2C0f80c4ec1C0b310d074Cd0557628364E783248](https://testnet.aurorascan.dev/address/0x2C0f80c4ec1C0b310d074Cd0557628364E783248)~~
 
-### OOPS Also deployed to mainnet
-Address: [0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0](https://aurorascan.dev/address/0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0)
+### Aurora mainnet
+- Proxy: [0xeA5A115D7B4106A36100F85b3CCaa57a36E619f9](https://aurorascan.dev/address/0xeA5A115D7B4106A36100F85b3CCaa57a36E619f9)
+- Implementation: [0xAE02A5Da75a55060bAEED0174f395aB0b334DD4F](https://aurorascan.dev/address/0xae02a5da75a55060baeed0174f395ab0b334dd4f)
+
+### Polygon (matic)
+- Proxy: [0xfA48739E92EF4A5d3a527A86A704018369bE175F](https://polygonscan.com/address/0xfA48739E92EF4A5d3a527A86A704018369bE175F)
+- Implementation: [?](?)
+
 
 ## What is a Hashie?
 Hashies are easy-to-issue NFTs to mark participation in an event, similar to POAPs on the Ethereum network. According to the [orignal POAP site](https://poap.xyz/):

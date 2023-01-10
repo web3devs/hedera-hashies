@@ -1,6 +1,6 @@
 [{
   "name": "ethereum",
-  "url": "https://mainnet.infura.io/v3/",
+  "url": "https://mainnet.infura.io/v3/66802112b18a4a3da0164f6efe70e3eb",
   "chainId": 1,
   "contractAddress": "0x0"
 },
@@ -8,7 +8,7 @@
   "name": "matic",
   "url": "https://rpc-mainnet.maticvigil.com",
   "chainId": 137,
-  "contractAddress": "0x0"
+  "contractAddress": "0xfA48739E92EF4A5d3a527A86A704018369bE175F"
 },
 {
   "name": "aurora",

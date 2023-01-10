@@ -11,7 +11,11 @@
     "deploy:testnet_aurora": "yarn predeploy && hardhat run scripts/deploy.ts --network testnet_aurora",
     "upgrade:testnet_aurora": "yarn predeploy && hardhat run scripts/upgrade.ts --network testnet_aurora",
     "deploy:aurora": "yarn predeploy && hardhat run scripts/deploy.ts --network aurora",
-    "upgrade:aurora": "yarn predeploy && hardhat run scripts/upgrade.ts --network aurora"
+    "upgrade:aurora": "yarn predeploy && hardhat run scripts/upgrade.ts --network aurora",
+    "deploy:ethereum": "yarn predeploy && hardhat run scripts/deploy.ts --network ethereum",
+    "upgrade:ethereum": "yarn predeploy && hardhat run scripts/upgrade.ts --network ethereum",
+    "deploy:matic": "yarn predeploy && hardhat run scripts/deploy.ts --network matic",
+    "upgrade:matic": "yarn predeploy && hardhat run scripts/upgrade.ts --network matic"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",

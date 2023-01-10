@@ -12,7 +12,7 @@ const config: HardhatUserConfig = {
   solidity: "0.8.9",
   networks: {
     ethereum: {
-      url: `https://mainnet.infura.io/v3/`,
+      url: `https://mainnet.infura.io/v3/66802112b18a4a3da0164f6efe70e3eb`,
       accounts: [`0x${AURORA_PRIVATE_KEY}`],
       chainId: 1,
       gasPrice: "auto"
